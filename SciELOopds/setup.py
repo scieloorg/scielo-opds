@@ -12,9 +12,9 @@ requires = [
     'waitress',
     ]
 
-setup(name='SciELOpds',
+setup(name='SciELOopds',
       version='0.0',
-      description='SciELOpds',
+      description='SciELOopds',
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
         "Programming Language :: Python",
@@ -31,10 +31,10 @@ setup(name='SciELOpds',
       zip_safe=False,
       install_requires=requires,
       tests_require=requires,
-      test_suite="scielopds",
+      test_suite="scieloopds",
       entry_points = """\
       [paste.app_factory]
-      main = scielopds:main
+      main = scieloopds:main
       """,
       )
 
