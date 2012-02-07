@@ -1,1 +1,1 @@
-SciELOpds README
+SciELOopds README
