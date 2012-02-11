@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns:dcterms="http://purl.org/dc/terms/" xmlns:thr="http://purl.org/syndication/thread/1.0" xmlns:opds="http://opds-spec.org/2010/catalog" xml:lang="en" xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:app="http://www.w3.org/2007/app" xmlns="http://www.w3.org/2005/Atom">
+  <id>http://www.feedbooks.com/publicdomain/catalog.atom</id>
+  <title>Public Domain Books</title>
+  <updated>2012-02-11T17:55:51Z</updated>
+  <icon>http://assets0.feedbooks.net/images/favicon.ico?t=1328803061</icon>
+  <author>
+    <name>Feedbooks</name>
+    <uri>http://www.feedbooks.com</uri>
+    <email>support@feedbooks.zendesk.com</email>
+  </author>
+  <link type="application/atom+xml; profile=opds-catalog; kind=navigation" href="http://www.feedbooks.com/publicdomain/catalog.atom" rel="self"/>
+  <link type="application/atom+xml;profile=opds-catalog;kind=navigation" title="Home" href="/catalog.atom" rel="start"/>
+  <link type="application/opensearchdescription+xml" title="Search on Feedbooks" href="http://assets0.feedbooks.net/opensearch.xml?t=1328803203" rel="search"/>
+  <link type="application/atom+xml;profile=opds-catalog;kind=acquisition" title="Bookshelf" href="https://www.feedbooks.com/user/bookshelf.atom" rel="http://opds-spec.org/shelf"/>
+<link type="application/atom+xml;profile=opds-catalog;kind=acquisition" title="Featured Books" href="http://www.feedbooks.com/featured.atom?view=books" rel="http://opds-spec.org/featured"/>
+<link type="application/atom+xml;profile=opds-catalog;kind=acquisition" title="Biography &amp; autobiography" href="http://www.feedbooks.com/books/top.atom?category=FBBIO000000&amp;range=week" rel="http://opds-spec.org/sort/popular"/>
+<link type="application/atom+xml;profile=opds-catalog;kind=acquisition" title="Thrillers" href="http://www.feedbooks.com/books/top.atom?category=FBFIC031000&amp;range=week" rel="http://opds-spec.org/sort/popular"/>
+<link type="application/atom+xml;profile=opds-catalog;kind=acquisition" title="Romance" href="http://www.feedbooks.com/books/top.atom?category=FBFIC027000&amp;range=week" rel="http://opds-spec.org/sort/popular"/>
+<entry>
+  <title>Recently Added</title>
+  <link type="application/atom+xml;profile=opds-catalog;kind=acquisition" href="http://www.feedbooks.com/books/recent.atom" rel="http://opds-spec.org/sort/new"/>
+  <updated>2012-02-11T17:55:51Z</updated>
+  <id>http://www.feedbooks.com/books/recent.atom</id>
+  <content type="text">Find the latest books available</content>
+</entry>
+<entry>
+  <title>Most Popular</title>
+  <link type="application/atom+xml;profile=opds-catalog;kind=acquisition" href="http://www.feedbooks.com/books/top.atom?range=month" rel="http://opds-spec.org/sort/popular"/>
+  <updated>2012-02-11T17:55:51Z</updated>
+  <id>http://www.feedbooks.com/books/top.atom?range=month</id>
+  <content type="text">Based on last week's downloads</content>
+</entry>
+<entry>
+  <title>Categories</title>
+  <link type="application/atom+xml;profile=opds-catalog;kind=navigation" href="http://www.feedbooks.com/books/categories.atom" rel="subsection"/>
+  <updated>2012-02-11T17:55:51Z</updated>
+  <id>http://www.feedbooks.com/books/categories.atom</id>
+  <content type="text">Browse book by category</content>
+</entry>
+</feed>
