@@ -10,6 +10,7 @@ requires = [
     'pyramid',
     'pyramid_debugtoolbar',
     'waitress',
+    'webtest',
     ]
 
 setup(name='SciELOopds',
