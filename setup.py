@@ -11,6 +11,8 @@ requires = [
     'pyramid_debugtoolbar',
     'waitress',
     'webtest',
+    'lxml',
+    'feedparser',
     ]
 
 setup(name='SciELOopds',
