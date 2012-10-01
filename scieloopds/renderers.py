@@ -1,80 +1,57 @@
+import opds
 from lxml import etree
 from lxml.builder import ElementMaker
 
 ATOM_NAMESPACE = 'http://www.w3.org/2005/Atom'
-OPDS_NAMESPACE = 'http://opds-spec.org/2010/catalog'
 
-class OpdsFeed(object):
+def make_feed(values):
+    atom = ElementMaker(namespace = ATOM_NAMESPACE,
+        nsmap =  {'atom' : ATOM_NAMESPACE})
+    dc = ElementMaker(namespace = opds.NAMESPACE,
+        nsmap={'dc' : opds.NAMESPACE})
 
-	def __init__(self, values):
-		self.atom = ElementMaker(namespace = ATOM_NAMESPACE,
-			nsmap =  {'atom' : ATOM_NAMESPACE})
-		self.dc = ElementMaker(namespace = OPDS_NAMESPACE,
-			nsmap={'dc' : OPDS_NAMESPACE})
-		self._make_feed(values)
+    feed = atom.feed(
+        atom.id(u'http://books.scielo.org/opds/'),
+        atom.title(u'SciELO Books'),
+        atom.updated(u'2012-10-04T21:26:04Z'),
+        atom.author(
+            atom.name(u'SciELO Books'),
+            atom.uri(u'http://books.scielo.org'),
+            atom.email(u'scielo.books@scielo.org')
+        ),
+        atom.link(type=opds.NAVIGATION, 
+            href=u'/opds/', rel=u'start')
+    )
 
-	def __str__(self):
-		return etree.tostring(self.feed, pretty_print=True)
+    links = values.get('link', [])
+    for link in links:
+        feed.append(atom.link(type = link['type'], 
+            href = link['href'], rel = link['rel']))
 
-	def _make_feed(self, values):
-		self.feed = self.atom.feed(
-			self.atom.id(values.pop('id')),
-			self.atom.title(values.pop('title')),
-			self.atom.updated(values.pop('updated'))
-		)
-		
-		self.feed.append(self._make_author(values.pop('author')))
+    entries = values.get('entry', [])
+    for entry in entries:
+        new_entry = atom.entry(
+            atom.title(entry['title']),
+            atom.id(entry['id']),
+            atom.updated(entry['updated'])
+        )
 
-		links = values.pop('link')
+        #TODO(allisonvoll@gmail.com): Implement author tag
 
-		for link in links:
-			self.feed.append(self._make_link(link))		
+        links = entry['link']
+        for link in links:
+            new_entry.append(atom.link(type = link['type'], 
+                href = link['href'], rel = link['rel']))
 
-		entries = values.pop('entry')
-		for entry in entries:
-			self.feed.append(self._make_entry(entry))
-
-	def _make_author(self, values):
-		author = self.atom.author()
-		author.append(self.atom.name(values.pop('name')))
-
-		if values.has_key('uri'):
-			author.append(self.atom.uri(values.pop('uri')))
-
-		if values.has_key('email'):
-			author.append(self.atom.email(values.pop('email')))
-
-		return author
-		
-	def _make_entry(self, values):
-		entry = self.atom.entry(
-			self.atom.title(values.pop('title')),
-			self.atom.id(values.pop('id')),
-			self.atom.updated(values.pop('updated'))
-		)
-
-		if values.has_key('author'):
-			entry.append(self._make_author(values.pop('author')))
-
-		links = values.pop('link')
-
-		for link in links:
-			entry.append(self._make_link(link))
-
-		return entry
-
-	def _make_link(self, values):
-		link = self.atom.link(
-			type  = values.pop('type'),
-			href  = values.pop('href'), 
-			rel   = values.pop('rel'))
-		return link
+        feed.append(new_entry)
+    return etree.tostring(feed, pretty_print=True)
 
 def opds_factory(info):
-	def _render(value, system):
-		request = system.get('request')
-		if request is not None:
-			response = request.response
-			response.charset = 'UTF-8'
-		return str(OpdsFeed(value))
-	return _render
+    def _render(value, system):
+        request = system.get('request')
+        if request is not None:
+            response = request.response
+            response.charset = 'UTF-8'
+            response.content_type = opds.CATALOG
+        return make_feed(value)
+    return _render
