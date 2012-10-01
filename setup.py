@@ -15,9 +15,9 @@ requires = [
     'feedparser',
     ]
 
-setup(name='SciELOopds',
+setup(name='scielo-opds',
       version='0.0',
-      description='SciELOopds',
+      description='scielo-opds',
       long_description=README + '\n\n' +  CHANGES,
       classifiers=[
         "Programming Language :: Python",
