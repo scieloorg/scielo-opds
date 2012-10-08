@@ -1,1 +1,1 @@
-SciELOopds README
+scielo-opds README
