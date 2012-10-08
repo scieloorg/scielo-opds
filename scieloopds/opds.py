@@ -7,4 +7,5 @@ ACQUISITION = 'application/atom+xml;profile=opds-catalog;kind=acquisition'
 NEW = u'http://opds-spec.org/sort/new'
 SUBSECTION = u'subsection'
 
+# Namespace
 NAMESPACE = 'http://opds-spec.org/2010/catalog'

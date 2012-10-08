@@ -4,11 +4,40 @@ from lxml.builder import ElementMaker
 
 ATOM_NAMESPACE = 'http://www.w3.org/2005/Atom'
 
-def make_feed(values):
+def make_entry(values):
+    """ Generate atom:entry from dict.
+    """
     atom = ElementMaker(namespace = ATOM_NAMESPACE,
         nsmap =  {'atom' : ATOM_NAMESPACE})
     dc = ElementMaker(namespace = opds.NAMESPACE,
         nsmap={'dc' : opds.NAMESPACE})
+
+    entry = atom.entry(
+        atom.title(values['title']),
+        atom.id(values['_id'])
+    )
+
+    if values.has_key('updated'):
+        entry.append(atom.updated(values['updated']))
+
+    if values.has_key('language'):
+        entry.append(dc.language(values['language']))
+
+    if values.has_key('year'):
+        entry.append(dc.issued(values['year']))
+
+    if values.has_key('link'):
+        entry.append(atom.link(type = values['link']['type'], 
+            href = values['link']['href'], rel = values['link']['rel']))
+
+    return entry
+
+
+def make_feed(values):
+    """ Generate atom:feed from dict.
+    """
+    atom = ElementMaker(namespace = ATOM_NAMESPACE,
+        nsmap =  {'atom' : ATOM_NAMESPACE})
 
     feed = atom.feed(
         atom.id(u'http://books.scielo.org/opds/'),
@@ -29,29 +58,20 @@ def make_feed(values):
             href = link['href'], rel = link['rel']))
 
     entries = values.get('entry', [])
-    for entry in entries:
-        new_entry = atom.entry(
-            atom.title(entry['title']),
-            atom.id(entry['id']),
-            atom.updated(entry['updated'])
-        )
+    for entry_values in entries:
+        feed.append(make_entry(entry_values))
 
-        #TODO(allisonvoll@gmail.com): Implement author tag
+    return feed
 
-        links = entry['link']
-        for link in links:
-            new_entry.append(atom.link(type = link['type'], 
-                href = link['href'], rel = link['rel']))
-
-        feed.append(new_entry)
-    return etree.tostring(feed, pretty_print=True)
 
 def opds_factory(info):
+    """ Pyramid Render which return OPDS Feed
+    """
     def _render(value, system):
         request = system.get('request')
         if request is not None:
             response = request.response
             response.charset = 'UTF-8'
             response.content_type = opds.CATALOG
-        return make_feed(value)
+        return etree.tostring(make_feed(value), pretty_print=True)
     return _render
