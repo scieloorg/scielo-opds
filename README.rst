@@ -25,3 +25,18 @@ OPDS compatible E-reader apps
 - FBreader (Android, Symbian, Meego etc.): http://www.fbreader.org/
  
 - Stanza (acquired by Amazon.com and discontinued)
+
+
+Roadmap
+=======
+
+- *ENT-01* Catalog Root (new books, publishers, alphabetical) [1]_
+- *ENT-02* Partial Catalog Entry (acquisition feed) [1]_
+- *ENT-03* Partial/Complete Catalog Entry (acquisition feed) [1]_
+- *ENT-04* Complete Catalog Entry (with pagination) [1]_
+- *ENT-05* Scielo webservice integration for Catalog Root/Entry
+- *ENT-06* Scielo webservice integration for Catalog Entry
+- *ENT-07* Compression and caching support (application side)
+- *ENT-08* Definition of deploy and configuration process
+
+.. [1] with fixtures provided by Scielo.
