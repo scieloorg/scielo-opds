@@ -26,9 +26,13 @@ def make_entry(values):
     if values.has_key('year'):
         entry.append(dc.issued(values['year']))
 
-    if values.has_key('link'):
-        entry.append(atom.link(type = values['link']['type'], 
-            href = values['link']['href'], rel = values['link']['rel']))
+    links = values.get('links', [])
+    for link in links:
+        entry.append(atom.link(type = link['type'], 
+            href = link['href'], rel = link['rel']))
+
+    if values.has_key('content'):
+        entry.append(atom.content(values['content'], type = 'xhtml'))
 
     return entry
 
@@ -40,8 +44,8 @@ def make_feed(values):
         nsmap =  {'atom' : ATOM_NAMESPACE})
 
     feed = atom.feed(
-        atom.id(u'http://books.scielo.org/opds/'),
-        atom.title(u'SciELO Books'),
+        atom.id(values.get('_id', u'http://books.scielo.org/opds/')),
+        atom.title(values.get('title', u'SciELO Books')),
         atom.updated(u'2012-10-04T21:26:04Z'),
         atom.author(
             atom.name(u'SciELO Books'),
@@ -52,7 +56,7 @@ def make_feed(values):
             href=u'/opds/', rel=u'start')
     )
 
-    links = values.get('link', [])
+    links = values.get('links', [])
     for link in links:
         feed.append(atom.link(type = link['type'], 
             href = link['href'], rel = link['rel']))
