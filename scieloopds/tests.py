@@ -29,52 +29,52 @@ class ViewTests(unittest.TestCase):
         from .views import alpha_catalog
         request = testing.DummyRequest()
         info = alpha_catalog(request)
-        self.assertTrue(info.has_key('_id'))
-        self.assertTrue(info.has_key('title'))
-        self.assertTrue(info.has_key('links'))
-        self.assertTrue(info.has_key('entry'))
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
         
         entries = info['entry']
         self.assertTrue(len(entries) > 0)        
         for entry in entries:
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('links', entry)
 
     def test_publishers(self):
         from .views import publisher_catalog
         request = testing.DummyRequest()
         info = publisher_catalog(request)
-        self.assertTrue(info.has_key('_id'))
-        self.assertTrue(info.has_key('title'))
-        self.assertTrue(info.has_key('links'))
-        self.assertTrue(info.has_key('entry'))
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
         
         entries = info['entry']
         self.assertTrue(len(entries) > 0)        
         for entry in entries:
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('links', entry)
 
     def test_new(self):
         from .views import new
         request = testing.DummyRequest()
         info = new(request)
-        self.assertTrue(info.has_key('_id'))
-        self.assertTrue(info.has_key('title'))
-        self.assertTrue(info.has_key('links'))
-        self.assertTrue(info.has_key('entry'))
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
         
         entries = info['entry']
         self.assertTrue(len(entries) > 0)        
         for entry in entries:
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('cover'))
-            self.assertTrue(entry.has_key('cover_thumbnail'))
-            self.assertTrue(entry.has_key('pdf_file'))
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('cover', entry)
+            self.assertIn('cover_thumbnail', entry)
+            self.assertIn('pdf_file', entry)
+            self.assertIn('links', entry)
 
 class RendererTests(unittest.TestCase):
     def setUp(self):
@@ -198,13 +198,13 @@ class FunctionalTests(unittest.TestCase):
         entries = feed.entries
         self.assertTrue(len(entries) > 0)
         for entry in entries:            
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('links', entry)
             self.assertTrue(entry['links'][0]['href'].startswith('/opds/alpha/'))
             self.assertEquals('subsection', entry['links'][0]['rel'])
             self.assertEquals(
                 'application/atom+xml;profile=opds-catalog;kind=acquisition',
                 entry['links'][0]['type'])
-            self.assertTrue(entry.has_key('title'))
+            self.assertIn('title', entry)
 
     def test_publisher_catalog(self):
         res = self.testapp.get('/opds/publisher', status=200)
@@ -226,13 +226,13 @@ class FunctionalTests(unittest.TestCase):
         entries = feed.entries
         self.assertTrue(len(entries) > 0)
         for entry in entries:
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('links', entry)
             self.assertTrue(entry['links'][0]['href'].startswith('/opds/publisher/'))
             self.assertEquals('subsection', entry['links'][0]['rel'])
             self.assertEquals(
                 'application/atom+xml;profile=opds-catalog;kind=acquisition',
                 entry['links'][0]['type'])
-            self.assertTrue(entry.has_key('title'))
+            self.assertIn('title', entry)
 
     def test_new(self):
         res = self.testapp.get('/opds/new', status=200)
@@ -254,11 +254,11 @@ class FunctionalTests(unittest.TestCase):
         entries = feed.entries
         self.assertTrue(len(entries) > 0)
         for entry in entries:
-            self.assertTrue(entry.has_key('links'))
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('publisher'))
-            self.assertTrue(entry.has_key('dc_identifier'))
+            self.assertIn('links', entry)
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('publisher', entry)
+            self.assertIn('dc_identifier', entry)
             links = entry['links']
             self.assertTrue(links[0]['href'].startswith('/opds/book/'))
             # Complete Entry
