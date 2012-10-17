@@ -57,18 +57,29 @@ def make_entry(values):
     if values.has_key('synopsis'):
         entry.append(atom.summary(values['synopsis']))
 
-    authors = values.get('creators', [])
+    authors = values.get('authors', [])
     for author_values in authors:
-        author_values = dict(author_values)
-        author = atom.author(atom.name(author_values['full_name']))
+        author = atom.author(atom.name(author_values['name']))
 
-        resume = author_values.get('link_resume', None)
+        resume = author_values.get('uri', None)
         if resume: author.append(atom.uri(resume))
         
         email = author_values.get('email', None)
         if email: author.append(atom.email(email))
 
         entry.append(author)
+
+    contributors = values.get('contributors', [])
+    for contributor_values in authors:
+        contributor = atom.author(atom.name(contributor_values['name']))
+
+        uri = contributor_values.get('uri', None)
+        if uri: author.append(atom.uri(uri))
+        
+        email = contributor_values.get('email', None)
+        if email: author.append(atom.email(email))
+
+        entry.append(contributor)
 
     return entry
 
@@ -82,7 +93,7 @@ def make_feed(values):
     feed = atom.feed(
         atom.id(values.get('_id', u'http://books.scielo.org/opds/')),
         atom.title(values.get('title', u'SciELO Books')),
-        atom.updated(u'2012-10-04T21:26:04Z'),
+        atom.updated(u'2012-10-17T02:57:04Z'),
         atom.author(
             atom.name(u'SciELO Books'),
             atom.uri(u'http://books.scielo.org'),

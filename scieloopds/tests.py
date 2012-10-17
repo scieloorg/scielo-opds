@@ -265,20 +265,63 @@ class FunctionalTests(unittest.TestCase):
             self.assertEquals('alternate', links[0]['rel'])           
             self.assertEquals(links[0]['type'],
                 'application/atom+xml;profile=opds-catalog;kind=acquisition')
-            # Acquisition EPUB File
-            self.assertEquals('http://opds-spec.org/acquisition', 
-                links[1]['rel'])
-            self.assertEquals(links[1]['type'], 
-                'application/atom+xml;profile=opds-catalog;kind=acquisition')
             # Acquisition PDF File
             self.assertEquals('http://opds-spec.org/acquisition', 
-                links[2]['rel'])
-            self.assertEquals(links[2]['type'], 'application/pdf')
+                links[1]['rel'])
+            self.assertEquals(links[1]['type'], 'application/pdf')
             # Thumbnail Image
             self.assertEquals('http://opds-spec.org/image/thumbnail', 
-                links[3]['rel'])
-            self.assertEquals(links[3]['type'], 'image/jpeg')
+                links[2]['rel'])
+            self.assertEquals(links[2]['type'], 'image/jpeg')
             # Cover Image
             self.assertEquals('http://opds-spec.org/image', 
-                links[4]['rel'])
-            self.assertEquals(links[4]['type'], 'image/jpeg')            
+                links[3]['rel'])
+            self.assertEquals(links[3]['type'], 'image/jpeg')            
+
+class ModelTests(unittest.TestCase):
+    def setUp(self):
+        self.config = testing.setUp()
+
+    def tearDown(self):
+        testing.tearDown()
+
+    def test_alpha(self):
+        from .models import Alphabetical
+        for alpha in Alphabetical.filter():
+            self.assertIn('_id', alpha)
+            self.assertIn('title', alpha)
+            self.assertIn('updated', alpha)
+
+    def test_publisher(self):
+        from .models import Publisher
+        for pub in Publisher.filter():
+            self.assertIn('_id', pub)
+            self.assertIn('title', pub)
+            self.assertIn('updated', pub)
+
+    def test_book(self):
+        from .models import Book
+        books = Book.filter(limite=10)
+        self.assertTrue(len(books) <= 10)
+        for book in books:
+            self.assertIn('_id', book)
+            self.assertIn('title', book)
+            self.assertIn('updated', book)
+            self.assertIn('authors', book)
+            self.assertIn('cover', book)
+            self.assertIn('cover_thumbnail', book)
+
+class OpdsTests(unittest.TestCase):
+    def setUp(self):
+        self.config = testing.setUp()
+
+    def tearDown(self):
+        testing.tearDown()
+
+    def test_make_link(self):
+        from .opds import make_link
+        link = make_link('http://opds-spec.org/image', 'image/jpeg', 
+            'http://test.tld/img.jpg')
+        self.assertEquals('http://opds-spec.org/image', link['rel'])
+        self.assertEquals('image/jpeg', link['type'])
+        self.assertEquals('http://test.tld/img.jpg', link['href'])
