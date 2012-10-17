@@ -1,6 +1,11 @@
 [
-    [
-        "C",
-        1
-    ]
+    {
+        "_id": "c",
+        "title": "C",
+        "updated": "2012-10-04T21:26:04Z",
+        "content": { 
+            "type": "text",
+            "value": "1 title(s)"
+        }
+    }
 ]

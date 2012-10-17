@@ -1,3 +1,11 @@
 [
-    "EDUFBA"
+    {
+        "_id": "edufba",
+        "title": "EDUFBA",
+        "updated": "2012-10-04T21:30:04Z",
+        "content": {
+            "type": "text",
+            "value": "1 title(s)"
+        }
+    }
 ]
