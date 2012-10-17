@@ -18,14 +18,14 @@ class ViewTests(unittest.TestCase):
         request = testing.DummyRequest()
         info = root(request)
         entries = info['entry']
-        self.assertEqual(entries[0]['_id'], 
-			 'http://books.scielo.org/opds/new')
-        self.assertEqual(entries[1]['_id'], 
-			 'http://books.scielo.org/opds/publishers')
-        self.assertEqual(entries[2]['_id'], 
-			 'http://books.scielo.org/opds/alpha')
+        self.assertEqual('http://books.scielo.org/opds/new',
+            entries[0]['_id'])
+        self.assertEqual('http://books.scielo.org/opds/publisher',
+            entries[1]['_id'])
+        self.assertEqual('http://books.scielo.org/opds/alpha',
+            entries[2]['_id'])
 
-    def test_alpha(self):
+    def test_alpha_catalog(self):
         from .views import alpha_catalog
         request = testing.DummyRequest()
         info = alpha_catalog(request)
@@ -40,6 +40,27 @@ class ViewTests(unittest.TestCase):
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
             self.assertIn('links', entry)
+
+    def test_alpha_filter(self):
+        from .views import alpha_filter
+        request = testing.DummyRequest()
+        request.matchdict['id'] = 'c'
+        info = alpha_filter(request)
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
+        
+        entries = info['entry']
+        self.assertTrue(len(entries) > 0)        
+        for entry in entries:
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('cover', entry)
+            self.assertIn('cover_thumbnail', entry)
+            self.assertIn('pdf_file', entry)
+            self.assertIn('links', entry)
+            self.assertTrue(entry['title'].startswith(u'C'))
 
     def test_publishers(self):
         from .views import publisher_catalog
@@ -56,6 +77,27 @@ class ViewTests(unittest.TestCase):
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
             self.assertIn('links', entry)
+
+    def test_publisher_filter(self):
+        from .views import publisher_filter
+        request = testing.DummyRequest()
+        request.matchdict['id'] = 'edufba'
+        info = publisher_filter(request)
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
+        
+        entries = info['entry']
+        self.assertTrue(len(entries) > 0)        
+        for entry in entries:
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('cover', entry)
+            self.assertIn('cover_thumbnail', entry)
+            self.assertIn('pdf_file', entry)
+            self.assertIn('links', entry)
+            self.assertEquals(u'EDUFBA', entry['publisher'])
 
     def test_new(self):
         from .views import new
@@ -167,10 +209,10 @@ class FunctionalTests(unittest.TestCase):
         self.assertEquals(u'/opds/new', link[0]['href'])
         # Publishers
         self.assertEquals(u'Publishers', entries[1]['title'])
-        self.assertEquals(u'http://books.scielo.org/opds/publishers', entries[1]['id'])
+        self.assertEquals(u'http://books.scielo.org/opds/publisher', entries[1]['id'])
         link = entries[1]['links']
         self.assertEquals(1, len(link))
-        self.assertEquals(u'/opds/publishers', link[0]['href'])
+        self.assertEquals(u'/opds/publisher', link[0]['href'])
         # Alphabetical
         self.assertEquals(u'Alphabetical', entries[2]['title'])
         self.assertEquals(u'http://books.scielo.org/opds/alpha', entries[2]['id'])
