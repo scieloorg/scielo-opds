@@ -16,4 +16,4 @@ def urlopen(request):
     res = _match.get(request.get_full_url().split('?')[0])
     if not res:
         raise HTTPError(request.get_full_url(), 404, '', '', None)
-    return open('%s/%s/%s' % ('.', 'fixtures', res))
+    return open('%s/%s/%s' % (__package__, 'fixtures', res))
