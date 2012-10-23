@@ -4,128 +4,29 @@
     "_id": "37t",
     "isbn": "9788523205607",
     "language": "pt",
+    "updated": "2012-10-04T22:15:10Z",
     "pdf_file": {
-      "uid": "pdfuid",
+      "type": "application/pdf",
       "filename": "com_com_soc_con_full.pdf"
     },
-    "country": "BR",
-    "format": [
-      [
-        "height",
-        null
-      ],
-      [
-        "width",
-        null
-      ]
-    ],
     "cover_thumbnail": {
-      "uid": "",
-      "filename": "cover.jpg.thumb.jpeg"
+      "type": "image/jpeg",
+      "filename": "http://books.scielo.org/id/37t/cover/cover_thumbnail.jpeg"
     },
     "cover": {
-      "uid": "coveruid",
-      "filename": "cover.jpg"
+      "type": "image/jpeg",
+      "filename": "http://books.scielo.org/id/37t/cover/cover.jpeg"
     },
-    "collection": [
-      [
-        "individual_author",
-        null
-      ],
-      [
-        "corporate_author",
-        null
-      ],
-      [
-        "title",
-        null
-      ],
-      [
-        "english_translated_title",
-        null
-      ],
-      [
-        "total_number_of_volumes",
-        null
-      ]
-    ],
-    "_attachments": {
-      "cover.jpg.thumb.jpeg": {
-        "stub": true,
-        "length": 5346,
-        "content_type": "image/jpeg",
-        "revpos": 4,
-        "digest": "md5-V+B/BsVqZkMHh+I0VkXxjg=="
-      },
-      "cover.jpg": {
-        "stub": true,
-        "length": 3863987,
-        "content_type": "image/jpeg",
-        "revpos": 3,
-        "digest": "md5-mg+HtoOnZUAXxtYfU/T3pw=="
-      },
-      "com_com_soc_con_full.pdf": {
-        "stub": true,
-        "length": 35589341,
-        "content_type": "application/pdf",
-        "revpos": 2,
-        "digest": "md5-/o+NiRfCwCbDE6JfT30Vhg=="
-      }
-    },
-    "visible": true,
     "synopsis": "O livro constr\u00f3i um di\u00e1logo entre pesquisadores brasileiros e franceses, de diferentes campos do conhecimento, sobre dois temas que passaram a ocupar os espa\u00e7os do debate acad\u00eamico e das a\u00e7\u00f5es p\u00fablicas, nas duas \u00faltimas d\u00e9cadas: a quest\u00e3o do desenvolvimento e a quest\u00e3o territorial. Duas quest\u00f5es foram colocadas para os pesquisadores: qual o significado do conceito de territ\u00f3rio a partir de seu campo de estudo e quais contribui\u00e7\u00f5es podem aportar para a compreens\u00e3o dos processos de desenvolvimento. Al\u00e9m de um rico debate no sentido epistemol\u00f3gico, a partir dos diversos campos de an\u00e1lise o livro aponta tamb\u00e9m algumas indaga\u00e7\u00f5es: como trabalhar a rela\u00e7\u00e3o entre espa\u00e7o e territ\u00f3rio, como caraceterizar fronteiras territoriais em um mundo em que, elas marcam profundamente tanto a uni\u00e3o/ interc\u00e2mbio quanto a  ruptura/interdi\u00e7\u00e3o? E v\u00e1rias outras quet\u00f5es que compoem a agenda de debate da economia, geografia, ciencias pol\u00edticas, sociologia e da administra\u00e7\u00e3o.",
-    "use_licence": "CC BY-NC-SA 3.0",
     "year": "2009",
     "title": "Compreendendo a complexidade socioespacial contempor\u00e2nea: o territ\u00f3rio como categoria de di\u00e1logo interdisciplinar",
-    "creators": [
-      [
-        [
-          "role",
-          "organizer"
-        ],
-        [
-          "full_name",
-          "Ribeiro, Maria Teresa Franco"
-        ],
-        [
-          "link_resume",
-          null
-        ]
-      ],
-      [
-        [
-          "role",
-          "organizer"
-        ],
-        [
-          "full_name",
-          "Milani, Carlos Roberto Sanchez"
-        ],
-        [
-          "link_resume",
-          null
-        ]
-      ]
-    ],
-    "TYPE": "Monograph",
-    "pages": "312",
-    "serie": [
-      [
-        "title",
-        null
-      ],
-      [
-        "issue",
-        null
-      ],
-      [
-        "issue_number",
-        null
-      ],
-      [
-        "issn",
-        null
-      ]
-    ]
+    "authors": [{
+      "name": "Ribeiro, Maria Teresa Franco",
+      "uri": null,
+      "email": null}],
+    "contributor": [{
+      "name": "Milani, Carlos Roberto Sanchez",
+      "uri": null,
+      "email": null}]
   }
 ]

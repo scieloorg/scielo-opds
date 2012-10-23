@@ -18,63 +18,105 @@ class ViewTests(unittest.TestCase):
         request = testing.DummyRequest()
         info = root(request)
         entries = info['entry']
-        self.assertEqual(entries[0]['_id'], 
-			 'http://books.scielo.org/opds/new')
-        self.assertEqual(entries[1]['_id'], 
-			 'http://books.scielo.org/opds/publishers')
-        self.assertEqual(entries[2]['_id'], 
-			 'http://books.scielo.org/opds/alpha')
+        self.assertEqual('http://books.scielo.org/opds/new',
+            entries[0]['_id'])
+        self.assertEqual('http://books.scielo.org/opds/publisher',
+            entries[1]['_id'])
+        self.assertEqual('http://books.scielo.org/opds/alpha',
+            entries[2]['_id'])
 
-    def test_alpha(self):
+    def test_alpha_catalog(self):
         from .views import alpha_catalog
         request = testing.DummyRequest()
         info = alpha_catalog(request)
-        self.assertTrue(info.has_key('_id'))
-        self.assertTrue(info.has_key('title'))
-        self.assertTrue(info.has_key('links'))
-        self.assertTrue(info.has_key('entry'))
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
         
         entries = info['entry']
         self.assertTrue(len(entries) > 0)        
         for entry in entries:
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('links', entry)
+
+    def test_alpha_filter(self):
+        from .views import alpha_filter
+        request = testing.DummyRequest()
+        request.matchdict['id'] = 'c'
+        info = alpha_filter(request)
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
+        
+        entries = info['entry']
+        self.assertTrue(len(entries) > 0)        
+        for entry in entries:
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('cover', entry)
+            self.assertIn('cover_thumbnail', entry)
+            self.assertIn('pdf_file', entry)
+            self.assertIn('links', entry)
+            self.assertTrue(entry['title'].startswith(u'C'))
 
     def test_publishers(self):
         from .views import publisher_catalog
         request = testing.DummyRequest()
         info = publisher_catalog(request)
-        self.assertTrue(info.has_key('_id'))
-        self.assertTrue(info.has_key('title'))
-        self.assertTrue(info.has_key('links'))
-        self.assertTrue(info.has_key('entry'))
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
         
         entries = info['entry']
         self.assertTrue(len(entries) > 0)        
         for entry in entries:
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('links', entry)
+
+    def test_publisher_filter(self):
+        from .views import publisher_filter
+        request = testing.DummyRequest()
+        request.matchdict['id'] = 'edufba'
+        info = publisher_filter(request)
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
+        
+        entries = info['entry']
+        self.assertTrue(len(entries) > 0)        
+        for entry in entries:
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('cover', entry)
+            self.assertIn('cover_thumbnail', entry)
+            self.assertIn('pdf_file', entry)
+            self.assertIn('links', entry)
+            self.assertEquals(u'EDUFBA', entry['publisher'])
 
     def test_new(self):
         from .views import new
         request = testing.DummyRequest()
         info = new(request)
-        self.assertTrue(info.has_key('_id'))
-        self.assertTrue(info.has_key('title'))
-        self.assertTrue(info.has_key('links'))
-        self.assertTrue(info.has_key('entry'))
+        self.assertIn('_id', info)
+        self.assertIn('title', info)
+        self.assertIn('links', info)
+        self.assertIn('entry', info)
         
         entries = info['entry']
         self.assertTrue(len(entries) > 0)        
         for entry in entries:
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('cover'))
-            self.assertTrue(entry.has_key('cover_thumbnail'))
-            self.assertTrue(entry.has_key('pdf_file'))
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('cover', entry)
+            self.assertIn('cover_thumbnail', entry)
+            self.assertIn('pdf_file', entry)
+            self.assertIn('links', entry)
 
 class RendererTests(unittest.TestCase):
     def setUp(self):
@@ -167,10 +209,10 @@ class FunctionalTests(unittest.TestCase):
         self.assertEquals(u'/opds/new', link[0]['href'])
         # Publishers
         self.assertEquals(u'Publishers', entries[1]['title'])
-        self.assertEquals(u'http://books.scielo.org/opds/publishers', entries[1]['id'])
+        self.assertEquals(u'http://books.scielo.org/opds/publisher', entries[1]['id'])
         link = entries[1]['links']
         self.assertEquals(1, len(link))
-        self.assertEquals(u'/opds/publishers', link[0]['href'])
+        self.assertEquals(u'/opds/publisher', link[0]['href'])
         # Alphabetical
         self.assertEquals(u'Alphabetical', entries[2]['title'])
         self.assertEquals(u'http://books.scielo.org/opds/alpha', entries[2]['id'])
@@ -198,13 +240,13 @@ class FunctionalTests(unittest.TestCase):
         entries = feed.entries
         self.assertTrue(len(entries) > 0)
         for entry in entries:            
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('links', entry)
             self.assertTrue(entry['links'][0]['href'].startswith('/opds/alpha/'))
             self.assertEquals('subsection', entry['links'][0]['rel'])
             self.assertEquals(
                 'application/atom+xml;profile=opds-catalog;kind=acquisition',
                 entry['links'][0]['type'])
-            self.assertTrue(entry.has_key('title'))
+            self.assertIn('title', entry)
 
     def test_publisher_catalog(self):
         res = self.testapp.get('/opds/publisher', status=200)
@@ -226,13 +268,13 @@ class FunctionalTests(unittest.TestCase):
         entries = feed.entries
         self.assertTrue(len(entries) > 0)
         for entry in entries:
-            self.assertTrue(entry.has_key('links'))
+            self.assertIn('links', entry)
             self.assertTrue(entry['links'][0]['href'].startswith('/opds/publisher/'))
             self.assertEquals('subsection', entry['links'][0]['rel'])
             self.assertEquals(
                 'application/atom+xml;profile=opds-catalog;kind=acquisition',
                 entry['links'][0]['type'])
-            self.assertTrue(entry.has_key('title'))
+            self.assertIn('title', entry)
 
     def test_new(self):
         res = self.testapp.get('/opds/new', status=200)
@@ -254,31 +296,74 @@ class FunctionalTests(unittest.TestCase):
         entries = feed.entries
         self.assertTrue(len(entries) > 0)
         for entry in entries:
-            self.assertTrue(entry.has_key('links'))
-            self.assertTrue(entry.has_key('title'))
-            self.assertTrue(entry.has_key('updated'))
-            self.assertTrue(entry.has_key('publisher'))
-            self.assertTrue(entry.has_key('dc_identifier'))
+            self.assertIn('links', entry)
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIn('publisher', entry)
+            self.assertIn('dc_identifier', entry)
             links = entry['links']
             self.assertTrue(links[0]['href'].startswith('/opds/book/'))
             # Complete Entry
             self.assertEquals('alternate', links[0]['rel'])           
             self.assertEquals(links[0]['type'],
                 'application/atom+xml;profile=opds-catalog;kind=acquisition')
-            # Acquisition EPUB File
-            self.assertEquals('http://opds-spec.org/acquisition', 
-                links[1]['rel'])
-            self.assertEquals(links[1]['type'], 
-                'application/atom+xml;profile=opds-catalog;kind=acquisition')
             # Acquisition PDF File
             self.assertEquals('http://opds-spec.org/acquisition', 
-                links[2]['rel'])
-            self.assertEquals(links[2]['type'], 'application/pdf')
+                links[1]['rel'])
+            self.assertEquals(links[1]['type'], 'application/pdf')
             # Thumbnail Image
             self.assertEquals('http://opds-spec.org/image/thumbnail', 
-                links[3]['rel'])
-            self.assertEquals(links[3]['type'], 'image/jpeg')
+                links[2]['rel'])
+            self.assertEquals(links[2]['type'], 'image/jpeg')
             # Cover Image
             self.assertEquals('http://opds-spec.org/image', 
-                links[4]['rel'])
-            self.assertEquals(links[4]['type'], 'image/jpeg')            
+                links[3]['rel'])
+            self.assertEquals(links[3]['type'], 'image/jpeg')            
+
+class ModelTests(unittest.TestCase):
+    def setUp(self):
+        self.config = testing.setUp()
+
+    def tearDown(self):
+        testing.tearDown()
+
+    def test_alpha(self):
+        from .models import Alphabetical
+        for alpha in Alphabetical.filter():
+            self.assertIn('_id', alpha)
+            self.assertIn('title', alpha)
+            self.assertIn('updated', alpha)
+
+    def test_publisher(self):
+        from .models import Publisher
+        for pub in Publisher.filter():
+            self.assertIn('_id', pub)
+            self.assertIn('title', pub)
+            self.assertIn('updated', pub)
+
+    def test_book(self):
+        from .models import Book
+        books = Book.filter(limite=10)
+        self.assertTrue(len(books) <= 10)
+        for book in books:
+            self.assertIn('_id', book)
+            self.assertIn('title', book)
+            self.assertIn('updated', book)
+            self.assertIn('authors', book)
+            self.assertIn('cover', book)
+            self.assertIn('cover_thumbnail', book)
+
+class OpdsTests(unittest.TestCase):
+    def setUp(self):
+        self.config = testing.setUp()
+
+    def tearDown(self):
+        testing.tearDown()
+
+    def test_make_link(self):
+        from .opds import make_link
+        link = make_link('http://opds-spec.org/image', 'image/jpeg', 
+            'http://test.tld/img.jpg')
+        self.assertEquals('http://opds-spec.org/image', link['rel'])
+        self.assertEquals('image/jpeg', link['type'])
+        self.assertEquals('http://test.tld/img.jpg', link['href'])
