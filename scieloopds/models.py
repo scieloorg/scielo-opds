@@ -1,6 +1,6 @@
 import json
 import urllib
-import mock_urllib as urllib2
+import urllib2_mock as urllib2
 
 class Rest(object):
 
@@ -8,10 +8,13 @@ class Rest(object):
         self.resource = resource
 
     def get(self, _id):
-        return open(self.resource)
+        return self.filter(_id = _id)
 
     def filter(self, **kwargs):
-        return open(self.resource)
+        params = urllib.urlencode(kwargs)
+        req = urllib2.Request(self.resource, params)
+        resp = urllib2.urlopen(req)
+        return resp
 
 class Model(object):
 
@@ -24,10 +27,10 @@ class Model(object):
         return json.load(cls.manager.filter(**kwargs))
 
 class Publisher(Model):
-    manager = Rest('%s/fixtures/publishers_list.json' % __package__)
+    manager = Rest('http://books.scielo.org/api/v1/publishers')
 
 class Alphabetical(Model):
-    manager = Rest('%s/fixtures/alpha_sum.json' % __package__)
+    manager = Rest('http://books.scielo.org/api/v1/alphasum')
 
 class Book(Model):
-    manager = Rest('%s/fixtures/37t.json' % __package__)
+    manager = Rest('http://books.scielo.org/api/v1/books')
