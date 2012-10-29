@@ -7,7 +7,11 @@
     "updated": "2012-10-04T22:15:10Z",
     "pdf_file": {
       "type": "application/pdf",
-      "filename": "com_com_soc_con_full.pdf"
+      "filename": "http://books.scielo.org/id/37t/pdf/ribeiro-9788523205607.pdf"
+    },
+    "epub_file": {
+      "type": "application/epub+zip",
+      "filename": "http://books.scielo.org/id/37t/epub/ribeiro-9788523205607.epub"
     },
     "cover_thumbnail": {
       "type": "image/jpeg",
