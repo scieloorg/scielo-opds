@@ -2,10 +2,6 @@
     {
         "_id": "c",
         "title": "C",
-        "updated": "2012-10-04T21:26:04Z",
-        "content": { 
-            "type": "text",
-            "value": "1 title(s)"
-        }
+        "total_items": 1
     }
 ]

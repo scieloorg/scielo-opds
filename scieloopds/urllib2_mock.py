@@ -1,9 +1,9 @@
 from urllib2 import HTTPError
 
 _match = {
-    'http://books.scielo.org/api/v1/publishers': 'publishers_list.json',
-    'http://books.scielo.org/api/v1/alphasum': 'alpha_sum.json',
-    'http://books.scielo.org/api/v1/books': '37t.json'}
+    'http://books.scielo.org/api/v1/publishers/': 'publishers_list.json',
+    'http://books.scielo.org/api/v1/alphasum/': 'alpha_sum.json',
+    'http://books.scielo.org/api/v1/books/': '37t.json'}
 
 class Request(object):
     def __init__(self, url, data=None):
