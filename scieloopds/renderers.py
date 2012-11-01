@@ -1,3 +1,4 @@
+import time
 from opds import ContentType, Namespace, LinkRel
 from lxml import etree
 from lxml.builder import ElementMaker
@@ -15,8 +16,8 @@ def make_entry(values):
         atom.id(values['_id'])
     )
 
-    if values.has_key('updated'):
-        entry.append(atom.updated(values['updated']))
+    updated = values.get('updated', time.localtime())
+    entry.append(atom.updated(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated)))
 
     if values.has_key('language'):
         entry.append(dc.language(values['language']))
@@ -38,17 +39,22 @@ def make_entry(values):
     if values.has_key('pdf_file'):
         link = values['pdf_file']
         entry.append(atom.link(type = link.get('type', 'application/pdf'),
-            href = link['filename'], rel = LinkRel.ACQUISITION))
+            href = link['uri'], rel = LinkRel.ACQUISITION))
+
+    if values.has_key('epub_file'):
+        link = values['epub_file']
+        entry.append(atom.link(type = link.get('type', 'application/epub+zip'),
+            href = link['uri'], rel = LinkRel.ACQUISITION))
 
     if values.has_key('cover_thumbnail'):
         link = values['cover_thumbnail']
         entry.append(atom.link(type = link.get('type', 'image/jpeg'),
-            href = link['filename'], rel = LinkRel.THUMBNAIL))
+            href = link['uri'], rel = LinkRel.THUMBNAIL))
 
     if values.has_key('cover'):
         link = values['cover']
         entry.append(atom.link(type = link.get('type', 'image/jpeg'),
-            href = link['filename'], rel = LinkRel.IMAGE))
+            href = link['uri'], rel = LinkRel.IMAGE))
 
     if values.has_key('content'):
         entry.append(atom.content(values['content']['value'],
@@ -90,10 +96,12 @@ def make_feed(values):
     atom = ElementMaker(namespace = Namespace.ATOM,
         nsmap =  {'atom' : Namespace.ATOM})
 
+    updated = values.get('updated', time.localtime())
+
     feed = atom.feed(
         atom.id(values.get('_id', u'http://books.scielo.org/opds/')),
         atom.title(values.get('title', u'SciELO Books')),
-        atom.updated(u'2012-10-17T02:57:04Z'),
+        atom.updated(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated)),
         atom.author(
             atom.name(u'SciELO Books'),
             atom.uri(u'http://books.scielo.org'),

@@ -1,6 +1,7 @@
 import unittest
 import feedparser
 import json
+import time
 
 from lxml import etree
 from pyramid import testing
@@ -59,7 +60,7 @@ class ViewTests(unittest.TestCase):
             self.assertIn('cover', entry)
             self.assertIn('cover_thumbnail', entry)
             self.assertIn('pdf_file', entry)
-            self.assertIn('links', entry)
+            self.assertIn('epub_file', entry)
             self.assertTrue(entry['title'].startswith(u'C'))
 
     def test_publishers(self):
@@ -96,7 +97,7 @@ class ViewTests(unittest.TestCase):
             self.assertIn('cover', entry)
             self.assertIn('cover_thumbnail', entry)
             self.assertIn('pdf_file', entry)
-            self.assertIn('links', entry)
+            self.assertIn('epub_file', entry)
             self.assertEquals(u'EDUFBA', entry['publisher'])
 
     def test_new(self):
@@ -116,7 +117,7 @@ class ViewTests(unittest.TestCase):
             self.assertIn('cover', entry)
             self.assertIn('cover_thumbnail', entry)
             self.assertIn('pdf_file', entry)
-            self.assertIn('links', entry)
+            self.assertIn('epub_file', entry)
 
 class RendererTests(unittest.TestCase):
     def setUp(self):
@@ -152,15 +153,16 @@ class RendererTests(unittest.TestCase):
 
     def test_make_opds_with_atom_elements(self):
         from .renderers import make_entry
+	updated = time.localtime()
         data = dict(_id=u'1234', title=u'Test', content={'value': 'content'},
-            updated=u'2012-10-14T18:16:01Z')
+            updated=updated)
         xml = make_entry(data)
         feed = feedparser.parse(etree.tostring(xml))
         # bozo flag is 1 if feed is malformed; bozo == 0 if good
         self.assertFalse(feed.bozo)
         entry = feed.entries[0]
         self.assertEqual(u'content', entry.content[0]['value'])
-        self.assertEqual(u'2012-10-14T18:16:01Z', entry.updated)
+        self.assertEqual(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated), entry.updated)
 
     def test_make_opds_from_scielobooks_monograph_large(self):
         # the largest monograph JSON record as of feb/2012
@@ -300,17 +302,15 @@ class FunctionalTests(unittest.TestCase):
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
             self.assertIn('publisher', entry)
-            self.assertIn('dc_identifier', entry)
             links = entry['links']
-            self.assertTrue(links[0]['href'].startswith('/opds/book/'))
-            # Complete Entry
-            self.assertEquals('alternate', links[0]['rel'])           
-            self.assertEquals(links[0]['type'],
-                'application/atom+xml;profile=opds-catalog;kind=acquisition')
             # Acquisition PDF File
             self.assertEquals('http://opds-spec.org/acquisition', 
+                links[0]['rel'])
+            self.assertEquals(links[0]['type'], 'application/pdf')
+            # Acquisition Epub File
+            self.assertEquals('http://opds-spec.org/acquisition', 
                 links[1]['rel'])
-            self.assertEquals(links[1]['type'], 'application/pdf')
+            self.assertEquals(links[1]['type'], 'application/epub+zip')
             # Thumbnail Image
             self.assertEquals('http://opds-spec.org/image/thumbnail', 
                 links[2]['rel'])
@@ -332,24 +332,19 @@ class ModelTests(unittest.TestCase):
         for alpha in Alphabetical.filter():
             self.assertIn('_id', alpha)
             self.assertIn('title', alpha)
-            self.assertIn('updated', alpha)
 
     def test_publisher(self):
         from .models import Publisher
         for pub in Publisher.filter():
             self.assertIn('_id', pub)
             self.assertIn('title', pub)
-            self.assertIn('updated', pub)
 
     def test_book(self):
         from .models import Book
-        books = Book.filter(limite=10)
-        self.assertTrue(len(books) <= 10)
+        books = Book.filter()
         for book in books:
             self.assertIn('_id', book)
             self.assertIn('title', book)
-            self.assertIn('updated', book)
-            self.assertIn('authors', book)
             self.assertIn('cover', book)
             self.assertIn('cover_thumbnail', book)
 

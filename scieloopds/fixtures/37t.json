@@ -4,22 +4,21 @@
     "_id": "37t",
     "isbn": "9788523205607",
     "language": "pt",
-    "updated": "2012-10-04T22:15:10Z",
     "pdf_file": {
       "type": "application/pdf",
-      "filename": "http://books.scielo.org/id/37t/pdf/ribeiro-9788523205607.pdf"
+      "uri": "http://books.scielo.org/id/37t/pdf/ribeiro-9788523205607.pdf"
     },
     "epub_file": {
       "type": "application/epub+zip",
-      "filename": "http://books.scielo.org/id/37t/epub/ribeiro-9788523205607.epub"
+      "uri": "http://books.scielo.org/id/37t/epub/ribeiro-9788523205607.epub"
     },
     "cover_thumbnail": {
       "type": "image/jpeg",
-      "filename": "http://books.scielo.org/id/37t/cover/cover_thumbnail.jpeg"
+      "uri": "http://books.scielo.org/id/37t/cover/cover_thumbnail.jpeg"
     },
     "cover": {
       "type": "image/jpeg",
-      "filename": "http://books.scielo.org/id/37t/cover/cover.jpeg"
+      "uri": "http://books.scielo.org/id/37t/cover/cover.jpeg"
     },
     "synopsis": "O livro constr\u00f3i um di\u00e1logo entre pesquisadores brasileiros e franceses, de diferentes campos do conhecimento, sobre dois temas que passaram a ocupar os espa\u00e7os do debate acad\u00eamico e das a\u00e7\u00f5es p\u00fablicas, nas duas \u00faltimas d\u00e9cadas: a quest\u00e3o do desenvolvimento e a quest\u00e3o territorial. Duas quest\u00f5es foram colocadas para os pesquisadores: qual o significado do conceito de territ\u00f3rio a partir de seu campo de estudo e quais contribui\u00e7\u00f5es podem aportar para a compreens\u00e3o dos processos de desenvolvimento. Al\u00e9m de um rico debate no sentido epistemol\u00f3gico, a partir dos diversos campos de an\u00e1lise o livro aponta tamb\u00e9m algumas indaga\u00e7\u00f5es: como trabalhar a rela\u00e7\u00e3o entre espa\u00e7o e territ\u00f3rio, como caraceterizar fronteiras territoriais em um mundo em que, elas marcam profundamente tanto a uni\u00e3o/ interc\u00e2mbio quanto a  ruptura/interdi\u00e7\u00e3o? E v\u00e1rias outras quet\u00f5es que compoem a agenda de debate da economia, geografia, ciencias pol\u00edticas, sociologia e da administra\u00e7\u00e3o.",
     "year": "2009",
