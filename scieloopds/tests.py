@@ -34,9 +34,9 @@ class ViewTests(unittest.TestCase):
         self.assertIn('title', info)
         self.assertIn('links', info)
         self.assertIn('entry', info)
-        
+
         entries = info['entry']
-        self.assertTrue(len(entries) > 0)        
+        self.assertTrue(len(entries) > 0)
         for entry in entries:
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
@@ -51,9 +51,9 @@ class ViewTests(unittest.TestCase):
         self.assertIn('title', info)
         self.assertIn('links', info)
         self.assertIn('entry', info)
-        
+
         entries = info['entry']
-        self.assertTrue(len(entries) > 0)        
+        self.assertTrue(len(entries) > 0)
         for entry in entries:
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
@@ -71,9 +71,9 @@ class ViewTests(unittest.TestCase):
         self.assertIn('title', info)
         self.assertIn('links', info)
         self.assertIn('entry', info)
-        
+
         entries = info['entry']
-        self.assertTrue(len(entries) > 0)        
+        self.assertTrue(len(entries) > 0)
         for entry in entries:
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
@@ -88,9 +88,9 @@ class ViewTests(unittest.TestCase):
         self.assertIn('title', info)
         self.assertIn('links', info)
         self.assertIn('entry', info)
-        
+
         entries = info['entry']
-        self.assertTrue(len(entries) > 0)        
+        self.assertTrue(len(entries) > 0)
         for entry in entries:
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
@@ -108,9 +108,9 @@ class ViewTests(unittest.TestCase):
         self.assertIn('title', info)
         self.assertIn('links', info)
         self.assertIn('entry', info)
-        
+
         entries = info['entry']
-        self.assertTrue(len(entries) > 0)        
+        self.assertTrue(len(entries) > 0)
         for entry in entries:
             self.assertIn('title', entry)
             self.assertIn('updated', entry)
@@ -118,6 +118,7 @@ class ViewTests(unittest.TestCase):
             self.assertIn('cover_thumbnail', entry)
             self.assertIn('pdf_file', entry)
             self.assertIn('epub_file', entry)
+
 
 class RendererTests(unittest.TestCase):
     def setUp(self):
@@ -128,7 +129,7 @@ class RendererTests(unittest.TestCase):
 
     def test_make_minimum_opds(self):
         from .renderers import make_entry
-        mini_data = {'_id': u'1234', 'title':u'The War of the Worlds'}
+        mini_data = {'_id': u'1234', 'title': u'The War of the Worlds'}
         xml = make_entry(mini_data)
         feed = feedparser.parse(etree.tostring(xml))
         # bozo flag is 1 if feed is malformed; bozo == 0 is good
@@ -138,8 +139,8 @@ class RendererTests(unittest.TestCase):
 
     def test_make_opds_with_dc_elements(self):
         from .renderers import make_entry
-        data = dict(_id=u'1234', language='pt-br', year='1963', 
-		    title='The Title', isbn=u'123456', 
+        data = dict(_id=u'1234', language='pt-br', year='1963',
+            title='The Title', isbn=u'123456',
             publisher=u'publisher')
         xml = make_entry(data)
         feed = feedparser.parse(etree.tostring(xml))
@@ -153,7 +154,7 @@ class RendererTests(unittest.TestCase):
 
     def test_make_opds_with_atom_elements(self):
         from .renderers import make_entry
-	updated = time.localtime()
+        updated = time.localtime()
         data = dict(_id=u'1234', title=u'Test', content={'value': 'content'},
             updated=updated)
         xml = make_entry(data)
@@ -162,7 +163,8 @@ class RendererTests(unittest.TestCase):
         self.assertFalse(feed.bozo)
         entry = feed.entries[0]
         self.assertEqual(u'content', entry.content[0]['value'])
-        self.assertEqual(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated), entry.updated)
+        self.assertEqual(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated),
+            entry.updated)
 
     def test_make_opds_from_scielobooks_monograph_large(self):
         # the largest monograph JSON record as of feb/2012
@@ -175,7 +177,8 @@ class RendererTests(unittest.TestCase):
         entry = feed.entries[0]
         self.assertEqual(entry.language, u'pt')
         self.assertEqual(entry.dc_issued, u'2009')
-        self.assertTrue(entry.title.startswith(u'Compreendendo a complexidade'))
+        self.assertTrue(
+            entry.title.startswith(u'Compreendendo a complexidade'))
         self.assertEqual(u'EDUFBA', entry.publisher)
 
 
@@ -205,19 +208,22 @@ class FunctionalTests(unittest.TestCase):
         entries = feed.entries
         self.assertEquals(3, len(entries))
         self.assertEquals(u'New Releases', entries[0]['title'])
-        self.assertEquals(u'http://books.scielo.org/opds/new', entries[0]['id'])
+        self.assertEquals(u'http://books.scielo.org/opds/new',
+            entries[0]['id'])
         link = entries[0]['links']
         self.assertEquals(1, len(link))
         self.assertEquals(u'/opds/new', link[0]['href'])
         # Publishers
         self.assertEquals(u'Publishers', entries[1]['title'])
-        self.assertEquals(u'http://books.scielo.org/opds/publisher', entries[1]['id'])
+        self.assertEquals(u'http://books.scielo.org/opds/publisher',
+            entries[1]['id'])
         link = entries[1]['links']
         self.assertEquals(1, len(link))
         self.assertEquals(u'/opds/publisher', link[0]['href'])
         # Alphabetical
         self.assertEquals(u'Alphabetical', entries[2]['title'])
-        self.assertEquals(u'http://books.scielo.org/opds/alpha', entries[2]['id'])
+        self.assertEquals(u'http://books.scielo.org/opds/alpha',
+            entries[2]['id'])
         link = entries[2]['links']
         self.assertEquals(1, len(link))
         self.assertEquals(u'/opds/alpha', link[0]['href'])
@@ -241,9 +247,10 @@ class FunctionalTests(unittest.TestCase):
         # check for catalog entries
         entries = feed.entries
         self.assertTrue(len(entries) > 0)
-        for entry in entries:            
+        for entry in entries:
             self.assertIn('links', entry)
-            self.assertTrue(entry['links'][0]['href'].startswith('/opds/alpha/'))
+            self.assertTrue(entry['links'][0]['href'].
+                startswith('/opds/alpha/'))
             self.assertEquals('subsection', entry['links'][0]['rel'])
             self.assertEquals(
                 'application/atom+xml;profile=opds-catalog;kind=acquisition',
@@ -271,7 +278,8 @@ class FunctionalTests(unittest.TestCase):
         self.assertTrue(len(entries) > 0)
         for entry in entries:
             self.assertIn('links', entry)
-            self.assertTrue(entry['links'][0]['href'].startswith('/opds/publisher/'))
+            self.assertTrue(entry['links'][0]['href'].
+                startswith('/opds/publisher/'))
             self.assertEquals('subsection', entry['links'][0]['rel'])
             self.assertEquals(
                 'application/atom+xml;profile=opds-catalog;kind=acquisition',
@@ -304,21 +312,22 @@ class FunctionalTests(unittest.TestCase):
             self.assertIn('publisher', entry)
             links = entry['links']
             # Acquisition PDF File
-            self.assertEquals('http://opds-spec.org/acquisition', 
+            self.assertEquals('http://opds-spec.org/acquisition',
                 links[0]['rel'])
             self.assertEquals(links[0]['type'], 'application/pdf')
             # Acquisition Epub File
-            self.assertEquals('http://opds-spec.org/acquisition', 
+            self.assertEquals('http://opds-spec.org/acquisition',
                 links[1]['rel'])
             self.assertEquals(links[1]['type'], 'application/epub+zip')
             # Thumbnail Image
-            self.assertEquals('http://opds-spec.org/image/thumbnail', 
+            self.assertEquals('http://opds-spec.org/image/thumbnail',
                 links[2]['rel'])
             self.assertEquals(links[2]['type'], 'image/jpeg')
             # Cover Image
-            self.assertEquals('http://opds-spec.org/image', 
+            self.assertEquals('http://opds-spec.org/image',
                 links[3]['rel'])
-            self.assertEquals(links[3]['type'], 'image/jpeg')            
+            self.assertEquals(links[3]['type'], 'image/jpeg')
+
 
 class ModelTests(unittest.TestCase):
     def setUp(self):
@@ -348,6 +357,7 @@ class ModelTests(unittest.TestCase):
             self.assertIn('cover', book)
             self.assertIn('cover_thumbnail', book)
 
+
 class OpdsTests(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
@@ -357,7 +367,7 @@ class OpdsTests(unittest.TestCase):
 
     def test_make_link(self):
         from .opds import make_link
-        link = make_link('http://opds-spec.org/image', 'image/jpeg', 
+        link = make_link('http://opds-spec.org/image', 'image/jpeg',
             'http://test.tld/img.jpg')
         self.assertEquals('http://opds-spec.org/image', link['rel'])
         self.assertEquals('image/jpeg', link['type'])
