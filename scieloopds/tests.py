@@ -140,7 +140,7 @@ class RendererTests(unittest.TestCase):
     def test_make_opds_with_dc_elements(self):
         from .renderers import make_entry
         data = dict(_id=u'1234', language='pt-br', year='1963',
-            title='The Title', isbn=u'123456',
+            title='The Title', eisbn=u'123456',
             publisher=u'publisher')
         xml = make_entry(data)
         feed = feedparser.parse(etree.tostring(xml))
@@ -180,6 +180,50 @@ class RendererTests(unittest.TestCase):
         self.assertTrue(
             entry.title.startswith(u'Compreendendo a complexidade'))
         self.assertEqual(u'EDUFBA', entry.publisher)
+        self.assertEqual(u'urn:isbn:9788523205607', entry.dc_identifier)
+        self.assertEqual(u'Ribeiro, Maria Teresa Franco', entry.author)
+        self.assertEqual(u'Milani, Carlos Roberto Sanchez',
+            entry.contributors[0].name)
+
+    def test_make_opds_with_author_contributor(self):
+        data = dict(_id='1234', title=u'Test')
+        creators = dict()
+        authors = (u'organizer', u'individual', u'corporate')
+        contributors = (u'translator', u'coordinator', u'collaborator',
+            u'editor', u'other')
+        creators['organizer'] = [[authors[0], None], ]
+        creators['individual_author'] = [[authors[1], u'uri'], ]
+        creators['corporate_author'] = [[authors[2], u'uri'], ]
+        creators['translator'] = [[contributors[0], None], ]
+        creators['coordinator'] = [[contributors[1], u'uri'], ]
+        creators['collaborator'] = [[contributors[2], u'uri'], ]
+        creators['editor'] = [[contributors[3], None], ]
+        creators['other'] = [[contributors[4], u'uri'], ]
+        data['creators'] = creators
+        from .renderers import make_entry
+        xml = make_entry(data)
+        feed = feedparser.parse(etree.tostring(xml))
+        # bozo flag is 1 if feed is malformed; bozo == 0 is good
+        self.assertFalse(feed.bozo)
+
+        entry = feed.entries[0]
+        count = 0
+        for author in entry.authors:
+            self.assertIn(author.name, authors)
+            if hasattr(author, 'href'):
+                self.assertEquals(author.href, 'uri')
+                count += 1
+        # 2 authors with uri
+        self.assertEquals(count, 2)
+
+        count = 0
+        for contrib in entry.contributors:
+            self.assertIn(contrib.name, contributors)
+            if hasattr(contrib, 'href'):
+                self.assertEquals(contrib.href, 'uri')
+                count += 1
+        # 2 contributors with uri
+        self.assertEquals(count, 3)
 
 
 class FunctionalTests(unittest.TestCase):

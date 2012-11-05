@@ -28,8 +28,8 @@ def make_entry(values):
     if 'publisher' in values:
         entry.append(dc.publisher(values['publisher']))
 
-    if 'isbn' in values:
-        entry.append(dc.identifier('urn:isbn:%s' % format(values['isbn'])))
+    if 'eisbn' in values:
+        entry.append(dc.identifier('urn:isbn:%s' % format(values['eisbn'])))
 
     links = values.get('links', [])
     for link in links:
@@ -63,34 +63,21 @@ def make_entry(values):
     if 'synopsis' in values:
         entry.append(atom.summary(values['synopsis']))
 
-    authors = values.get('authors', [])
-    for author_values in authors:
-        author = atom.author(atom.name(author_values['name']))
+    creators = values.get('creators', {})
+    for author_key in ('individual_author', 'corporate_author', 'organizer'):
+        for author in creators.get(author_key, []):
+            new_author = atom.author(atom.name(author[0]))
+            if author[1]:
+                new_author.append(atom.uri(author[1]))
+            entry.append(new_author)
 
-        resume = author_values.get('uri', None)
-        if resume:
-            author.append(atom.uri(resume))
-
-        email = author_values.get('email', None)
-        if email:
-            author.append(atom.email(email))
-
-        entry.append(author)
-
-    contributors = values.get('contributors', [])
-    for contributor_values in contributors:
-        contributor = atom.author(atom.name(contributor_values['name']))
-
-        uri = contributor_values.get('uri', None)
-        if uri:
-            author.append(atom.uri(uri))
-
-        email = contributor_values.get('email', None)
-        if email:
-            author.append(atom.email(email))
-
-        entry.append(contributor)
-
+    for contributor_key in ('editor', 'translator', 'collaborator', 'other',
+        'coordinator'):
+        for contributor in creators.get(contributor_key, []):
+            new_contrib = atom.contributor(atom.name(contributor[0]))
+            if contributor[1]:
+                new_contrib.append(atom.uri(contributor[1]))
+            entry.append(new_contrib)
     return entry
 
 
