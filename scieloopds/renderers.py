@@ -1,4 +1,4 @@
-import time
+from datetime import datetime
 from opds import ContentType, Namespace, LinkRel
 from lxml import etree
 from lxml.builder import ElementMaker
@@ -16,8 +16,8 @@ def make_entry(values):
         atom.title(values['title']),
         atom.id(values['_id']))
 
-    updated = values.get('updated', time.localtime())
-    entry.append(atom.updated(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated)))
+    updated = values.get('updated', datetime.now())
+    entry.append(atom.updated(updated.strftime('%Y-%m-%dT%H:%M:%SZ')))
 
     if 'language' in values:
         entry.append(dc.language(values['language']))
@@ -87,12 +87,12 @@ def make_feed(values):
     atom = ElementMaker(namespace=Namespace.ATOM,
         nsmap={'atom': Namespace.ATOM})
 
-    updated = values.get('updated', time.localtime())
+    updated = values.get('updated', datetime.now())
 
     feed = atom.feed(
         atom.id(values.get('_id', u'http://books.scielo.org/opds/')),
         atom.title(values.get('title', u'SciELO Books')),
-        atom.updated(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated)),
+        atom.updated(updated.strftime('%Y-%m-%dT%H:%M:%SZ')),
         atom.author(
             atom.name(u'SciELO Books'),
             atom.uri(u'http://books.scielo.org'),
