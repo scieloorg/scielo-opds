@@ -6,7 +6,9 @@ from urllib import urlencode, quote
 from opds import LinkRel, ContentType, make_link
 from pymongo import Connection
 
-log = logging.getLogger(__name__)
+import sys
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+log = logging.getLogger(__package__)
 
 _db_host = 'localhost'
 _db_port = 27017
@@ -22,32 +24,36 @@ db = conn[_db_name]
 def rest_fetch(url, **kwargs):
     params = urlencode([(k, v.encode('utf-8')) for k, v in kwargs.items()])
     req = urllib2.Request(url, params)
+    log.info('fetching <%s%s>' % (url, '?' + params if params else ''))
     resp = urllib2.urlopen(req)
     data = json.load(resp)
     return data
 
 
 def get_catalog(_id, url, link_builder=None, **kwargs):
-    data = rest_fetch(url, **kwargs)
-    catalog = {}
-    catalog['_id'] = _id
-    catalog['updated'] = datetime.now()
-    entries = []
-    for entry in data:
-        updated = entry.get('updated', None)
-        if updated:
-            entry['updated'] = datetime.strptime(updated,
-                '%Y-%m-%d %H:%M:%S.%f')
-        else:
-            entry['updated'] = catalog['updated']
-        if link_builder:
-            entry['links'] = link_builder(entry)
-        if 'total_items' in entry:
-            entry['content'] = {'value':
-                u'{:d} item(s)'.format(entry['total_items'])}
-        entries.append(entry)
-    catalog['entry'] = entries
-    return catalog
+    try:
+        data = rest_fetch(url, **kwargs)
+        catalog = {}
+        catalog['_id'] = _id
+        catalog['updated'] = datetime.now()
+        entries = []
+        for entry in data:
+            updated = entry.get('updated', None)
+            if updated:
+                entry['updated'] = datetime.strptime(updated,
+                    '%Y-%m-%d %H:%M:%S.%f')
+            else:
+                entry['updated'] = catalog['updated']
+            if link_builder:
+                entry['links'] = link_builder(entry)
+            if 'total_items' in entry:
+                entry['content'] = {'value':
+                    u'{:d} item(s)'.format(entry['total_items'])}
+            entries.append(entry)
+        catalog['entry'] = entries
+        return catalog
+    except urllib2.URLError as e:
+        log.error('%s:%s <%s>' % (e.__class__.__name__, e.message, e.url))
 
 
 def link_factory(base_url):
@@ -58,7 +64,8 @@ def link_factory(base_url):
     return f
 
 
-def main():
+def main(**settings):
+    log.info('starting synchronization')
     alpha_index = get_catalog('alpha', _rest_alpha,
         link_builder=link_factory('/opds/alpha/{}'))
     if alpha_index:
@@ -90,8 +97,23 @@ def main():
                     format('?'.join(_rest_book,
                         'filter_publisher=' + entry['_id'])))
     else:
-        log.warning('Resource {0} returns emptry catalog.'.
+        log.warning('Resource {0} returns empty catalog.'.
             format(_rest_publisher))
+
+    #new = get_catalog('new', _rest_book)
+    new = rest_fetch(_rest_book)
+    if new:
+        for book in new:
+            updated = book.get('updated', None)
+            if updated:
+                book['updated'] = datetime.strptime(updated,
+                    '%Y-%m-%d %H:%M:%S.%f')
+            else:
+                book['updated'] = datetime.now()
+            db.book.save(book)
+    else:
+        log.warning('Resource {0} returns empty catalog.'.format(_rest_book))
+    log.info('synchronization finish')
 
 if __name__ == '__main__':
     main()

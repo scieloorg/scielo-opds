@@ -1,8 +1,9 @@
 from datetime import datetime
-from models import Catalog, Alphabetical, Publisher
+from models import Catalog, Alphabetical, Publisher, Book
 from opds import LinkRel, ContentType, make_link
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPNotFound
+from pymongo import DESCENDING
 
 
 @view_config(route_name='root', renderer='opds')
@@ -120,14 +121,11 @@ def new(request):
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/new')]
 
-    entry = []
-    #FIXME
-    #for book in Book.filter(sort='new'):
-    #    book['updated'] = datetime.now()
-    #    entry.append(book)
+    book = [b for b in Book.find().sort('updated', DESCENDING).limit(50)]
 
     return {
         '_id': 'http://books.scielo.org/opds/new',
         'title': 'SciELO Books - New Releases',
+        'updated': datetime.now(),
         'links': link,
-        'entry': entry}
+        'entry': book}

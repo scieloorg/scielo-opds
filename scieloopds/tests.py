@@ -111,7 +111,6 @@ class ViewTests(unittest.TestCase):
             self.assertIn('epub_file', entry)
             self.assertEquals(u'EDUFBA', entry['publisher'])
 
-    @unittest.skip("Implement new releases in mongo backend")
     def test_new(self):
         from .views import new
         request = testing.DummyRequest()
@@ -342,7 +341,6 @@ class FunctionalTests(unittest.TestCase):
                 entry['links'][0]['type'])
             self.assertIn('title', entry)
 
-    @unittest.skip("Implement new releases in mongo backend")
     def test_new(self):
         res = self.testapp.get('/opds/new', status=200)
         ct = res.content_type
@@ -435,15 +433,18 @@ class ModelTests(unittest.TestCase):
             self.assertIn('content', pub)
             self.assertIn('links', pub)
 
-    @unittest.skip("Implement new releases in mongo backend")
     def test_book(self):
         from .models import Book
-        books = Book.filter()
+        books = Book.find()
         for book in books:
             self.assertIn('_id', book)
             self.assertIn('title', book)
+            self.assertIn('updated', book)
             self.assertIn('cover', book)
             self.assertIn('cover_thumbnail', book)
+            self.assertIn('synopsis', book)
+            self.assertIn('epub_file', book)
+            self.assertIn('creators', book)
 
 
 class OpdsTests(unittest.TestCase):

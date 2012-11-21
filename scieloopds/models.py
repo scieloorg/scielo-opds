@@ -26,12 +26,20 @@ class Mongo(object):
         data = col.find_one({'_id': _id})
         return data
 
+    def find(self, **kwargs):
+        col = self.get_collection(self.resource)
+        return col.find(**kwargs)
+
 
 class Model(object):
 
     @classmethod
     def get(cls, _id):
         return cls.manager.get(_id)
+
+    @classmethod
+    def find(cls, **kwargs):
+        return cls.manager.find(**kwargs)
 
 
 class Catalog(Model):
