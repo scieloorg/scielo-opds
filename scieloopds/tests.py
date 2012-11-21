@@ -1,10 +1,21 @@
 import unittest
 import feedparser
 import json
-import time
+import sync
+import urllib2_mock
+from datetime import datetime
 
 from lxml import etree
 from pyramid import testing
+
+
+def setUpModule():
+    from models import Mongo
+    sync.urllib2 = urllib2_mock
+    Mongo.get_collection('alpha').drop()
+    Mongo.get_collection('publisher').drop()
+    Mongo.get_collection('book').drop()
+    sync.main()
 
 
 class ViewTests(unittest.TestCase):
@@ -154,7 +165,7 @@ class RendererTests(unittest.TestCase):
 
     def test_make_opds_with_atom_elements(self):
         from .renderers import make_entry
-        updated = time.localtime()
+        updated = datetime.now()
         data = dict(_id=u'1234', title=u'Test', content={'value': 'content'},
             updated=updated)
         xml = make_entry(data)
@@ -163,7 +174,7 @@ class RendererTests(unittest.TestCase):
         self.assertFalse(feed.bozo)
         entry = feed.entries[0]
         self.assertEqual(u'content', entry.content[0]['value'])
-        self.assertEqual(time.strftime('%Y-%m-%dT%H:%M:%SZ', updated),
+        self.assertEqual(updated.strftime('%Y-%m-%dT%H:%M:%SZ'),
             entry.updated)
 
     def test_make_opds_from_scielobooks_monograph_large(self):
@@ -380,26 +391,60 @@ class ModelTests(unittest.TestCase):
     def tearDown(self):
         testing.tearDown()
 
-    def test_alpha(self):
-        from .models import Alphabetical
-        for alpha in Alphabetical.filter():
+    def test_catalog_alpha(self):
+        from .models import Catalog
+        catalog = Catalog.get('alpha')
+        self.assertEquals('alpha', catalog['_id'])
+        self.assertIn('updated', catalog)
+        self.assertIsInstance(catalog['updated'], datetime)
+        for alpha in catalog['entry']:
             self.assertIn('_id', alpha)
             self.assertIn('title', alpha)
+            self.assertIn('updated', alpha)
+            self.assertIsInstance(alpha['updated'], datetime)
+            self.assertIn('content', alpha)
+            self.assertIn('links', alpha)
 
-    def test_publisher(self):
-        from .models import Publisher
-        for pub in Publisher.filter():
+    def test_filter_alpha(self):
+        from .models import Alphabetical
+        alpha = Alphabetical.get('c')
+        self.assertEquals('c', alpha['_id'])
+        self.assertIn('updated', alpha)
+        self.assertIsInstance(alpha['updated'], datetime)
+        for entry in alpha['entry']:
+            self.assertIn('_id', entry)
+            self.assertIn('title', entry)
+            self.assertIn('updated', entry)
+            self.assertIsInstance(entry['updated'], datetime)
+            self.assertIn('publisher', entry)
+            self.assertIn('title', entry)
+
+    def test_catalog_publisher(self):
+        from .models import Catalog
+        catalog = Catalog.get('publisher')
+        self.assertEquals('publisher', catalog['_id'])
+        self.assertIn('updated', catalog)
+        self.assertIsInstance(catalog['updated'], datetime)
+        for pub in catalog['entry']:
             self.assertIn('_id', pub)
             self.assertIn('title', pub)
+            self.assertIn('updated', pub)
+            self.assertIsInstance(pub['updated'], datetime)
+            self.assertIn('content', pub)
+            self.assertIn('links', pub)
 
     def test_book(self):
         from .models import Book
-        books = Book.filter()
+        books = Book.find()
         for book in books:
             self.assertIn('_id', book)
             self.assertIn('title', book)
+            self.assertIn('updated', book)
             self.assertIn('cover', book)
             self.assertIn('cover_thumbnail', book)
+            self.assertIn('synopsis', book)
+            self.assertIn('epub_file', book)
+            self.assertIn('creators', book)
 
 
 class OpdsTests(unittest.TestCase):

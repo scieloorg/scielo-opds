@@ -13,6 +13,7 @@ requires = [
     'webtest',
     'lxml',
     'feedparser',
+    'pymongo',
     ]
 
 setup(name='scielo-opds',

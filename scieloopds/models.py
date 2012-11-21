@@ -1,43 +1,58 @@
-import json
-import urllib
-#import urllib2_mock as urllib2
-import urllib2
+from pymongo import Connection
 
 
-class Rest(object):
+class Mongo(object):
+
+    _db_host = 'localhost'
+    _db_port = 27017
+    _db_name = __package__
+    _db = None
+
+    @classmethod
+    def get_connection(cls):
+        if not cls._db:
+            cls._db = Connection(cls._db_host, cls._db_port)[cls._db_name]
+        return cls._db
+
+    @classmethod
+    def get_collection(cls, collection):
+        return cls.get_connection()[collection]
 
     def __init__(self, resource):
         self.resource = resource
 
     def get(self, _id):
-        return self.filter(id=id)
+        col = self.get_collection(self.resource)
+        data = col.find_one({'_id': _id})
+        return data
 
-    def filter(self, **kwargs):
-        params = urllib.urlencode(
-            [(k, v.encode('utf-8')) for k, v in kwargs.items()])
-        req = urllib2.Request(self.resource, params)
-        resp = urllib2.urlopen(req)
-        return resp
+    def find(self, **kwargs):
+        col = self.get_collection(self.resource)
+        return col.find(**kwargs)
 
 
 class Model(object):
 
     @classmethod
     def get(cls, _id):
-        return json.load(cls.manager.get(_id))
+        return cls.manager.get(_id)
 
     @classmethod
-    def filter(cls, **kwargs):
-        return json.load(cls.manager.filter(**kwargs))
+    def find(cls, **kwargs):
+        return cls.manager.find(**kwargs)
+
+
+class Catalog(Model):
+    manager = Mongo('catalog')
 
 
 class Publisher(Model):
-    manager = Rest('http://books.scielo.org/api/v1/publishers/')
+    manager = Mongo('publisher')
 
 
 class Alphabetical(Model):
-    manager = Rest('http://books.scielo.org/api/v1/alphasum/')
+    manager = Mongo('alpha')
 
 
 class Book(Model):
-    manager = Rest('http://books.scielo.org/api/v1/books/')
+    manager = Mongo('book')
