@@ -1,4 +1,6 @@
 from pyramid.config import Configurator
+from models import Mongo
+from pymongo import DESCENDING
 
 
 def main(global_config, **settings):
@@ -14,4 +16,6 @@ def main(global_config, **settings):
     config.add_route('publisher_filter', '/opds/publisher/{id}')
     config.scan()
     config.add_renderer('opds', factory='scieloopds.renderers.opds_factory')
+    # Create indexes in mongodb
+    Mongo.get_collection('book').ensure_index([('updated', DESCENDING)])
     return config.make_wsgi_app()
