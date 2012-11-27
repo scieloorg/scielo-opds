@@ -32,6 +32,7 @@ class Sync(Thread):
         log = logging.getLogger('Sync')
         try:
             log.info('fetching <%s>' % self.src)
+            now = datetime.now()
             data = rest_fetch(self.src)
             if not data:
                 raise SyncError('Resource <%s> result is empty' %
@@ -50,6 +51,8 @@ class Sync(Thread):
                 if 'publisher' in entry:
                     entry['publisher'] = entry['publisher'].upper()
                 self.db[self.dst].save(entry)
+
+            self.db.catalog.update({'_id': 1}, {'$set': {self.dst: now}})
 
         except urllib2.URLError as e:
             log.error('%s:%s <%s> %s' % (e.__class__.__name__,
@@ -72,6 +75,15 @@ def main(**settings):
     conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
     db = do_connect(conn, db_url)
 
+    now = datetime.now()
+    catalog = db.catalog.find_one()
+    if catalog:
+        if catalog.get('updating', False):
+            return
+        db.catalog.update({'_id': 1}, {'$set': {'updating': True}})
+    else:
+        db.catalog.save({'_id': 1, 'updating': True})
+
     def run():
         jobs = []
         for src, dst in resource:
@@ -83,6 +95,8 @@ def main(**settings):
             job.join()
 
     run()
+    db.catalog.update({'_id': 1}, {'$set':
+        {'updated': now, 'updating': False}})
 
 
 if __name__ == '__main__':
