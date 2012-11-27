@@ -1,119 +1,119 @@
-import logging
 import urllib2
 import json
+import logging
+import pymongo
+from scieloopds import do_connect
+from threading import Thread
 from datetime import datetime
-from urllib import urlencode, quote
-from opds import LinkRel, ContentType, make_link
-from pymongo import Connection
-
-import sys
-logging.basicConfig(stream=sys.stdout, level=logging.INFO)
-log = logging.getLogger(__package__)
-
-_db_host = 'localhost'
-_db_port = 27017
-_db_name = __package__
-_rest_alpha = 'http://books.scielo.org/api/v1/alphasum/'
-_rest_publisher = 'http://books.scielo.org/api/v1/publishers/'
-_rest_book = 'http://books.scielo.org/api/v1/books/'
-
-conn = Connection(_db_host, _db_port)
-db = conn[_db_name]
+from urlparse import urlparse, urljoin
+from httplib import HTTPException
 
 
-def rest_fetch(url, **kwargs):
-    params = urlencode([(k, v.encode('utf-8')) for k, v in kwargs.items()])
-    req = urllib2.Request(url, params)
-    log.info('fetching <%s%s>' % (url, '?' + params if params else ''))
+def rest_fetch(url):
+    req = urllib2.Request(url)
     resp = urllib2.urlopen(req)
     data = json.load(resp)
     return data
 
 
-def get_catalog(_id, url, link_builder=None, **kwargs):
-    try:
-        data = rest_fetch(url, **kwargs)
-        catalog = {}
-        catalog['_id'] = _id
-        catalog['updated'] = datetime.now()
-        entries = []
-        for entry in data:
-            updated = entry.get('updated', None)
-            if updated:
-                entry['updated'] = datetime.strptime(updated,
-                    '%Y-%m-%d %H:%M:%S.%f')
-            else:
-                entry['updated'] = catalog['updated']
-            if link_builder:
-                entry['links'] = link_builder(entry)
-            if 'total_items' in entry:
-                entry['content'] = {'value':
-                    u'{:d} item(s)'.format(entry['total_items'])}
-            entries.append(entry)
-        catalog['entry'] = entries
-        return catalog
-    except urllib2.URLError as e:
-        log.error('%s:%s <%s>' % (e.__class__.__name__, e.message, e.url))
+class SyncError(Exception):
+    pass
 
 
-def link_factory(base_url):
-    def f(entry):
-        link = make_link(LinkRel.SUBSECTION, ContentType.ACQUISITION,
-            base_url.format(quote(entry['_id'].encode('utf-8'))))
-        return (link, )
-    return f
+class Sync(Thread):
+
+    def __init__(self, src, dst, db):
+        super(Sync, self).__init__()
+        self.src = src
+        self.dst = dst
+        self.db = db
+
+    def run(self):
+        log = logging.getLogger('Sync')
+        try:
+            log.info('fetching <%s>' % self.src)
+            now = datetime.now()
+            data = rest_fetch(self.src)
+            if not data:
+                raise SyncError('Resource <%s> result is empty' %
+                    self.src)
+
+            for entry in data:
+                updated = entry.get('updated', None)
+                if updated:
+                    entry['updated'] = datetime.strptime(updated,
+                        '%Y-%m-%d %H:%M:%S.%f')
+                else:
+                    entry['updated'] = datetime.now()
+                if 'total_items' in entry:
+                    entry['content'] = {'type': 'text',
+                        'value': '%s book(s)' % entry['total_items']}
+                if 'publisher' in entry:
+                    entry['publisher'] = entry['publisher'].upper()
+                self.db[self.dst].save(entry)
+
+            self.db.catalog.update({'_id': 1}, {'$set': {self.dst: now}})
+
+        except urllib2.URLError as e:
+            log.error('%s:%s <%s> %s' % (e.__class__.__name__,
+                e.message, e.url, e.msg))
+        except HTTPException as e:
+            log.error('%s:%s <%s> ' % (e.__class__.__name__,
+                e.message, self.url))
+        except SyncError as e:
+            log.warning('%s' % e.message)
 
 
 def main(**settings):
-    log.info('starting synchronization')
-    alpha_index = get_catalog('alpha', _rest_alpha,
-        link_builder=link_factory('/opds/alpha/{}'))
-    if alpha_index:
-        db.catalog.remove()
-        db.catalog.save(alpha_index)
-        for entry in alpha_index['entry']:
-            alpha = get_catalog(entry['_id'], _rest_book,
-                filter_initial=entry['_id'])
-            if alpha:
-                db.alpha.save(alpha)
-            else:
-                log.warning('Resource {0} returns empty catalog.'.
-                    format('?'.join(_rest_book,
-                        'filter_initial=' + entry['_id'])))
-    else:
-        log.warning('Resource {0} returns empty catalog.'.format(_rest_alpha))
+    base_url = settings['scielo_uri']
+    resource = ((urljoin(base_url, 'books/'), 'book'),
+        (urljoin(base_url, 'alphasum/'), 'alpha'),
+        (urljoin(base_url, 'publishers/'), 'publisher'))
 
-    pub_index = get_catalog('publisher', _rest_publisher,
-        link_builder=link_factory('/opds/publisher/{}'))
-    if pub_index:
-        db.catalog.save(pub_index)
-        for entry in pub_index['entry']:
-            pub = get_catalog(entry['_id'], _rest_book,
-                filter_pulisher=entry['_id'])
-            if pub:
-                db.publisher.save(pub)
-            else:
-                log.warning('Resource {0} returns emptry catalog.'.
-                    format('?'.join(_rest_book,
-                        'filter_publisher=' + entry['_id'])))
-    else:
-        log.warning('Resource {0} returns empty catalog.'.
-            format(_rest_publisher))
+    # Create mongodb connection
+    db_url = urlparse(settings['mongo_uri'])
+    conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
+    db = do_connect(conn, db_url)
 
-    #new = get_catalog('new', _rest_book)
-    new = rest_fetch(_rest_book)
-    if new:
-        for book in new:
-            updated = book.get('updated', None)
-            if updated:
-                book['updated'] = datetime.strptime(updated,
-                    '%Y-%m-%d %H:%M:%S.%f')
-            else:
-                book['updated'] = datetime.now()
-            db.book.save(book)
+    now = datetime.now()
+    catalog = db.catalog.find_one()
+    if catalog:
+        if catalog.get('updating', False):
+            return
+        db.catalog.update({'_id': 1}, {'$set': {'updating': True}})
     else:
-        log.warning('Resource {0} returns empty catalog.'.format(_rest_book))
-    log.info('synchronization finish')
+        db.catalog.save({'_id': 1, 'updating': True})
+
+    def run():
+        jobs = []
+        for src, dst in resource:
+            j = Sync(src, dst, db)
+            j.start()
+            jobs.append(j)
+
+        for job in jobs:
+            job.join()
+
+    run()
+    db.catalog.update({'_id': 1}, {'$set':
+        {'updated': now, 'updating': False}})
+
 
 if __name__ == '__main__':
-    main()
+    import sys
+    import ConfigParser
+    import logging.config
+    try:
+        if len(sys.argv) < 3:
+            print 'Usage: %s -f CONFIG_FILE)'
+            sys.exit(1)
+        config = ConfigParser.RawConfigParser()
+        config.readfp(open(sys.argv[-1]))
+        settings = dict(config.items('app:main'))
+
+        logging.config.fileConfig(sys.argv[-1])
+
+        main(**settings)
+    except IOError:
+        print 'Usage: %s -f CONFIG_FILE)'
+        sys.exit(1)

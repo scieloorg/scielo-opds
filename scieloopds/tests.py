@@ -3,24 +3,36 @@ import feedparser
 import json
 import sync
 import urllib2_mock
+import pymongo
 from datetime import datetime
+from urlparse import urlparse
+from scieloopds import do_connect
 
 from lxml import etree
 from pyramid import testing
 
+settings = {}
+settings['mongo_uri'] = 'mongodb://localhost:27017/scieloopds-test'
+settings['scielo_uri'] = 'http://books.scielo.org/api/v1/'
+# Create mongodb connection
+db_url = urlparse(settings['mongo_uri'])
+conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
+
 
 def setUpModule():
-    from models import Mongo
     sync.urllib2 = urllib2_mock
-    Mongo.get_collection('alpha').drop()
-    Mongo.get_collection('publisher').drop()
-    Mongo.get_collection('book').drop()
-    sync.main()
+    sync.main(**settings)
+
+
+def tearDownModule():
+    db = do_connect(conn, db_url)
+    conn.drop_database(db.name)
 
 
 class ViewTests(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
+        self.db = do_connect(conn, db_url)
 
     def tearDown(self):
         testing.tearDown()
@@ -28,6 +40,7 @@ class ViewTests(unittest.TestCase):
     def test_root(self):
         from .views import root
         request = testing.DummyRequest()
+        request.db = self.db
         info = root(request)
         entries = info['entry']
         self.assertEqual('http://books.scielo.org/opds/new',
@@ -40,6 +53,7 @@ class ViewTests(unittest.TestCase):
     def test_alpha_catalog(self):
         from .views import alpha_catalog
         request = testing.DummyRequest()
+        request.db = self.db
         info = alpha_catalog(request)
         self.assertIn('_id', info)
         self.assertIn('title', info)
@@ -56,7 +70,8 @@ class ViewTests(unittest.TestCase):
     def test_alpha_filter(self):
         from .views import alpha_filter
         request = testing.DummyRequest()
-        request.matchdict['id'] = 'c'
+        request.db = self.db
+        request.matchdict['id'] = 'C'
         info = alpha_filter(request)
         self.assertIn('_id', info)
         self.assertIn('title', info)
@@ -77,6 +92,7 @@ class ViewTests(unittest.TestCase):
     def test_publishers(self):
         from .views import publisher_catalog
         request = testing.DummyRequest()
+        request.db = self.db
         info = publisher_catalog(request)
         self.assertIn('_id', info)
         self.assertIn('title', info)
@@ -93,7 +109,8 @@ class ViewTests(unittest.TestCase):
     def test_publisher_filter(self):
         from .views import publisher_filter
         request = testing.DummyRequest()
-        request.matchdict['id'] = 'edufba'
+        request.db = self.db
+        request.matchdict['id'] = 'EDUFBA'
         info = publisher_filter(request)
         self.assertIn('_id', info)
         self.assertIn('title', info)
@@ -114,6 +131,7 @@ class ViewTests(unittest.TestCase):
     def test_new(self):
         from .views import new
         request = testing.DummyRequest()
+        request.db = self.db
         info = new(request)
         self.assertIn('_id', info)
         self.assertIn('title', info)
@@ -240,7 +258,7 @@ class RendererTests(unittest.TestCase):
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
         from scieloopds import main
-        app = main({})
+        app = main({}, **settings)
         from webtest import TestApp
         self.testapp = TestApp(app)
 
@@ -382,69 +400,6 @@ class FunctionalTests(unittest.TestCase):
             self.assertEquals('http://opds-spec.org/image',
                 links[3]['rel'])
             self.assertEquals(links[3]['type'], 'image/jpeg')
-
-
-class ModelTests(unittest.TestCase):
-    def setUp(self):
-        self.config = testing.setUp()
-
-    def tearDown(self):
-        testing.tearDown()
-
-    def test_catalog_alpha(self):
-        from .models import Catalog
-        catalog = Catalog.get('alpha')
-        self.assertEquals('alpha', catalog['_id'])
-        self.assertIn('updated', catalog)
-        self.assertIsInstance(catalog['updated'], datetime)
-        for alpha in catalog['entry']:
-            self.assertIn('_id', alpha)
-            self.assertIn('title', alpha)
-            self.assertIn('updated', alpha)
-            self.assertIsInstance(alpha['updated'], datetime)
-            self.assertIn('content', alpha)
-            self.assertIn('links', alpha)
-
-    def test_filter_alpha(self):
-        from .models import Alphabetical
-        alpha = Alphabetical.get('c')
-        self.assertEquals('c', alpha['_id'])
-        self.assertIn('updated', alpha)
-        self.assertIsInstance(alpha['updated'], datetime)
-        for entry in alpha['entry']:
-            self.assertIn('_id', entry)
-            self.assertIn('title', entry)
-            self.assertIn('updated', entry)
-            self.assertIsInstance(entry['updated'], datetime)
-            self.assertIn('publisher', entry)
-            self.assertIn('title', entry)
-
-    def test_catalog_publisher(self):
-        from .models import Catalog
-        catalog = Catalog.get('publisher')
-        self.assertEquals('publisher', catalog['_id'])
-        self.assertIn('updated', catalog)
-        self.assertIsInstance(catalog['updated'], datetime)
-        for pub in catalog['entry']:
-            self.assertIn('_id', pub)
-            self.assertIn('title', pub)
-            self.assertIn('updated', pub)
-            self.assertIsInstance(pub['updated'], datetime)
-            self.assertIn('content', pub)
-            self.assertIn('links', pub)
-
-    def test_book(self):
-        from .models import Book
-        books = Book.find()
-        for book in books:
-            self.assertIn('_id', book)
-            self.assertIn('title', book)
-            self.assertIn('updated', book)
-            self.assertIn('cover', book)
-            self.assertIn('cover_thumbnail', book)
-            self.assertIn('synopsis', book)
-            self.assertIn('epub_file', book)
-            self.assertIn('creators', book)
 
 
 class OpdsTests(unittest.TestCase):

@@ -1,9 +1,9 @@
 from datetime import datetime
-from models import Catalog, Alphabetical, Publisher, Book
 from opds import LinkRel, ContentType, make_link
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPNotFound
-from pymongo import DESCENDING
+from pymongo import ASCENDING, DESCENDING
+from urllib import quote
 
 
 @view_config(route_name='root', renderer='opds')
@@ -43,16 +43,20 @@ def alpha_catalog(request):
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/alpha')]
 
-    alpha = Catalog.get('alpha')
-    if not alpha:
-        alpha = {'entry': [], 'updated': datetime.now()}
+    entry = []
+    for alpha in request.db.alpha.find():
+        if 'links' not in alpha:
+            alpha['links'] = [make_link(LinkRel.SUBSECTION,
+                ContentType.ACQUISITION, '/opds/alpha/{}'.format(quote
+                    (alpha['_id'].encode('utf8')))), ]
+        entry.append(alpha)
 
     return {
         '_id': 'http://books.scielo.org/opds/alpha',
         'title': 'SciELO Books - Alphabetical',
         'links': link,
-        'entry': alpha['entry'],
-        'updated': alpha['updated']}
+        'entry': entry,
+        'updated': datetime.now()}
 
 
 @view_config(route_name='alpha_filter', renderer='opds')
@@ -60,9 +64,14 @@ def alpha_filter(request):
     """ OPDS Alpha filter for books
     """
     _id = request.matchdict['id']
-    alpha = Alphabetical.get(_id)
-    if not alpha:
+    result = request.db.book.find({'title': {'$regex': '^%s' % _id}}
+        ).sort('title', ASCENDING)
+    if not result:
         raise HTTPNotFound()
+
+    entry = []
+    for alpha in result:
+        entry.append(alpha)
 
     link = [make_link('up', ContentType.NAVIGATION, '/opds/alpha'),
         make_link('self', ContentType.NAVIGATION,
@@ -71,9 +80,9 @@ def alpha_filter(request):
     return {
         '_id': u'http://books.scielo.org/opds/alpha/{}'.format(_id),
         'title': u'SciELO Books - Filter starting with "{}"'.format(_id),
-        'updated': alpha['updated'],
+        'updated': datetime.now(),
         'links': link,
-        'entry': alpha['entry']}
+        'entry': entry}
 
 
 @view_config(route_name='publisher_catalog', renderer='opds')
@@ -83,16 +92,20 @@ def publisher_catalog(request):
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/publisher')]
 
-    pub = Catalog.get('publisher')
-    if not pub:
-        pub = {'entry': [], 'updated': datetime.now()}
+    entry = []
+    for pub in request.db.publisher.find():
+        if 'links' not in pub:
+            pub['links'] = [make_link(LinkRel.SUBSECTION,
+                ContentType.ACQUISITION, '/opds/publisher/{}'.format(quote
+                    (pub['_id'].encode('utf8')))), ]
+        entry.append(pub)
 
     return {
         '_id': 'http://books.scielo.org/opds/publisher',
         'title': 'SciELO Books - Publishers',
-        'updated': pub['updated'],
+        'updated': datetime.now(),
         'links': link,
-        'entry': pub['entry']}
+        'entry': entry}
 
 
 @view_config(route_name='publisher_filter', renderer='opds')
@@ -100,9 +113,13 @@ def publisher_filter(request):
     """ OPDS Catalog Publisher filter for books
     """
     _id = request.matchdict['id']
-    pub = Publisher.get(_id)
-    if not pub:
+    result = request.db.book.find({'publisher': _id}).sort('title', ASCENDING)
+    if not result:
         raise HTTPNotFound
+
+    entry = []
+    for pub in result:
+        entry.append(pub)
 
     link = [make_link('up', ContentType.NAVIGATION, '/opds/publisher'),
         make_link('self', ContentType.NAVIGATION,
@@ -111,9 +128,9 @@ def publisher_filter(request):
     return {
         '_id': 'http://books.scielo.org/opds/publisher/{}'.format(_id),
         'title': 'SciELO Books - Filter for publisher "{}"'.format(_id),
-        'updated': pub['updated'],
+        'updated': datetime.now(),
         'links': link,
-        'entry': pub['entry']}
+        'entry': entry}
 
 
 @view_config(route_name='new', renderer='opds')
@@ -121,11 +138,17 @@ def new(request):
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/new')]
 
-    book = [b for b in Book.find().sort('updated', DESCENDING).limit(50)]
+    result = request.db.book.find().sort('updated', DESCENDING).limit(50)
+    if not result:
+        raise HTTPNotFound
+
+    entry = []
+    for book in result:
+        entry.append(book)
 
     return {
         '_id': 'http://books.scielo.org/opds/new',
         'title': 'SciELO Books - New Releases',
         'updated': datetime.now(),
         'links': link,
-        'entry': book}
+        'entry': entry}
