@@ -1,10 +1,14 @@
 from datetime import datetime
-from .opds import LinkRel, ContentType, make_link
+from .opds import LinkRel, ContentType, make_link, make_pagination_links
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPNotFound
 from pymongo import ASCENDING, DESCENDING, errors
-from urllib import quote
+from urllib import quote, unquote
 import logging
+
+
+def paginate(cursor, page, items_per_page):
+    return cursor.skip((page - 1) * items_per_page).limit(items_per_page)
 
 
 @view_config(route_name='root', renderer='opds')
@@ -73,16 +77,29 @@ def alpha_filter(request):
     if not result:
         raise HTTPNotFound()
 
+    base_url = '/opds/alpha/{}'.format(_id)
+    link = [make_link('up', ContentType.NAVIGATION, '/opds/alpha'),
+        make_link('self', ContentType.NAVIGATION, base_url)]
+
     entry = []
     try:
-        for alpha in result:
+        try:
+            items_per_page = int(
+                request.registry.settings.get('items_per_page', 20))
+        except ValueError:
+            items_per_page = 20
+        try:
+            page = int(request.params.get('page', 1))
+        except ValueError:
+            page = 1
+
+        link.extend(make_pagination_links(base_url, page, items_per_page,
+            result.count()))
+
+        for alpha in paginate(result, page, items_per_page):
             entry.append(alpha)
     except errors.AutoReconnect as e:
         logging.getLogger(__name__).error('MongoDB: %s' % e.message)
-
-    link = [make_link('up', ContentType.NAVIGATION, '/opds/alpha'),
-        make_link('self', ContentType.NAVIGATION,
-            '/opds/alpha/{}'.format(_id))]
 
     return {
         '_id': 'http://books.scielo.org/opds/alpha/{}'.format(_id),
@@ -123,24 +140,40 @@ def publisher_filter(request):
     """ OPDS Catalog Publisher filter for books
     """
     _id = request.matchdict['id']
-    result = request.db.book.find({'publisher': _id}).sort('title', ASCENDING)
+    result = request.db.book.find({'publisher': unquote(_id)}
+        ).sort('title', ASCENDING)
     if not result:
         raise HTTPNotFound
 
+    base_url = '/opds/publisher/{}'.format(_id)
+
+    link = [make_link('up', ContentType.NAVIGATION, '/opds/publisher'),
+        make_link('self', ContentType.NAVIGATION, base_url)]
+
     entry = []
     try:
-        for pub in result:
+        try:
+            items_per_page = int(
+                request.registry.settings.get('items_per_page', 20))
+        except ValueError:
+            items_per_page = 20
+        try:
+            page = int(request.params.get('page', 1))
+        except ValueError:
+            page = 1
+
+        link.extend(make_pagination_links(base_url, page, items_per_page,
+            result.count()))
+
+        for pub in paginate(result, page, items_per_page):
             entry.append(pub)
     except errors.AutoReconnect as e:
         logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
-    link = [make_link('up', ContentType.NAVIGATION, '/opds/publisher'),
-        make_link('self', ContentType.NAVIGATION,
-            '/opds/publisher/{}'.format(_id))]
-
     return {
         '_id': 'http://books.scielo.org/opds/publisher/{}'.format(_id),
-        'title': 'SciELO Books - Filter for publisher "{}"'.format(_id),
+        'title': 'SciELO Books - Filter for publisher "{}"'.format(
+            unquote(_id)),
         'updated': datetime.now(),
         'links': link,
         'entry': entry}
@@ -151,13 +184,27 @@ def new(request):
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/new')]
 
-    result = request.db.book.find().sort('updated', DESCENDING).limit(50)
+    result = request.db.book.find().sort('updated', DESCENDING)
     if not result:
         raise HTTPNotFound
 
     entry = []
     try:
-        for book in result:
+        try:
+            items_per_page = int(
+                request.registry.settings.get('items_per_page', 20))
+        except ValueError:
+            items_per_page = 20
+
+        try:
+            page = int(request.params.get('page', 1))
+        except ValueError:
+            page = 1
+
+        link.extend(make_pagination_links('/opds/new', page, items_per_page,
+            result.count()))
+
+        for book in paginate(result, page, items_per_page):
             entry.append(book)
     except errors.AutoReconnect as e:
         logging.getLogger(__name__).error('MongoDB: %s' % e.message)
