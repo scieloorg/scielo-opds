@@ -1,4 +1,6 @@
 import pymongo
+import sys
+import logging
 from pyramid.config import Configurator
 from pyramid.events import NewRequest
 from urlparse import urlparse
@@ -27,7 +29,11 @@ def main(global_config, **settings):
 
     # Create mongodb connection
     db_url = urlparse(settings['mongo_uri'])
-    conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
+    try:
+        conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
+    except pymongo.errors.AutoReconnect as e:
+        logging.getLogger(__name__).error('MongoDB: %s' % e.message)
+        sys.exit(1)
     config.registry.settings['db_conn'] = conn
 
     # Create mongodb indexes
@@ -45,14 +51,17 @@ def main(global_config, **settings):
             # 10 minutes default interval
             interval = settings.get('auto_sync_interval', 600)
             cmd = settings['auto_sync_cmd'].split()
-            catalog = db.catalog.find_one()
-            if catalog:
-                last_updated = catalog['updated'] + timedelta(
-                    seconds=int(interval))
-                if last_updated < datetime.now():
+            try:
+                catalog = db.catalog.find_one()
+                if catalog:
+                    last_updated = catalog['updated'] + timedelta(
+                        seconds=int(interval))
+                    if last_updated < datetime.now():
+                        Popen(cmd)
+                else:
                     Popen(cmd)
-            else:
-                Popen(cmd)
+            except pymongo.errors.AutoReconnect as e:
+                logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
         event.request.db = db
     config.add_subscriber(add_mongo_db, NewRequest)

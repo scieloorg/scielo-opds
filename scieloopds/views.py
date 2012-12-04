@@ -1,9 +1,10 @@
 from datetime import datetime
-from opds import LinkRel, ContentType, make_link
+from .opds import LinkRel, ContentType, make_link
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPNotFound
-from pymongo import ASCENDING, DESCENDING
+from pymongo import ASCENDING, DESCENDING, errors
 from urllib import quote
+import logging
 
 
 @view_config(route_name='root', renderer='opds')
@@ -44,12 +45,15 @@ def alpha_catalog(request):
         make_link('self', ContentType.NAVIGATION, '/opds/alpha')]
 
     entry = []
-    for alpha in request.db.alpha.find():
-        if 'links' not in alpha:
-            alpha['links'] = [make_link(LinkRel.SUBSECTION,
-                ContentType.ACQUISITION, '/opds/alpha/{}'.format(quote
-                    (alpha['_id'].encode('utf8')))), ]
-        entry.append(alpha)
+    try:
+        for alpha in request.db.alpha.find():
+            if 'links' not in alpha:
+                alpha['links'] = [make_link(LinkRel.SUBSECTION,
+                    ContentType.ACQUISITION, '/opds/alpha/{}'.format(quote
+                        (alpha['_id'].encode('utf8')))), ]
+            entry.append(alpha)
+    except errors.AutoReconnect as e:
+        logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
     return {
         '_id': 'http://books.scielo.org/opds/alpha',
@@ -70,16 +74,19 @@ def alpha_filter(request):
         raise HTTPNotFound()
 
     entry = []
-    for alpha in result:
-        entry.append(alpha)
+    try:
+        for alpha in result:
+            entry.append(alpha)
+    except errors.AutoReconnect as e:
+        logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
     link = [make_link('up', ContentType.NAVIGATION, '/opds/alpha'),
         make_link('self', ContentType.NAVIGATION,
-            u'/opds/alpha/{}'.format(_id))]
+            '/opds/alpha/{}'.format(_id))]
 
     return {
-        '_id': u'http://books.scielo.org/opds/alpha/{}'.format(_id),
-        'title': u'SciELO Books - Filter starting with "{}"'.format(_id),
+        '_id': 'http://books.scielo.org/opds/alpha/{}'.format(_id),
+        'title': 'SciELO Books - Filter starting with "{}"'.format(_id),
         'updated': datetime.now(),
         'links': link,
         'entry': entry}
@@ -93,12 +100,15 @@ def publisher_catalog(request):
         make_link('self', ContentType.NAVIGATION, '/opds/publisher')]
 
     entry = []
-    for pub in request.db.publisher.find():
-        if 'links' not in pub:
-            pub['links'] = [make_link(LinkRel.SUBSECTION,
-                ContentType.ACQUISITION, '/opds/publisher/{}'.format(quote
-                    (pub['_id'].encode('utf8')))), ]
-        entry.append(pub)
+    try:
+        for pub in request.db.publisher.find():
+            if 'links' not in pub:
+                pub['links'] = [make_link(LinkRel.SUBSECTION,
+                    ContentType.ACQUISITION, '/opds/publisher/{}'.format(quote
+                        (pub['_id'].encode('utf8')))), ]
+            entry.append(pub)
+    except errors.AutoReconnect as e:
+        logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
     return {
         '_id': 'http://books.scielo.org/opds/publisher',
@@ -118,8 +128,11 @@ def publisher_filter(request):
         raise HTTPNotFound
 
     entry = []
-    for pub in result:
-        entry.append(pub)
+    try:
+        for pub in result:
+            entry.append(pub)
+    except errors.AutoReconnect as e:
+        logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
     link = [make_link('up', ContentType.NAVIGATION, '/opds/publisher'),
         make_link('self', ContentType.NAVIGATION,
@@ -143,8 +156,11 @@ def new(request):
         raise HTTPNotFound
 
     entry = []
-    for book in result:
-        entry.append(book)
+    try:
+        for book in result:
+            entry.append(book)
+    except errors.AutoReconnect as e:
+        logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
     return {
         '_id': 'http://books.scielo.org/opds/new',
