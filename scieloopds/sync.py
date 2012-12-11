@@ -7,6 +7,7 @@ from threading import Thread
 from datetime import datetime
 from urlparse import urlparse, urljoin
 from httplib import HTTPException
+from unicodedata import normalize
 
 
 def rest_fetch(url):
@@ -50,6 +51,9 @@ class Sync(Thread):
                         'value': '%s book(s)' % entry['total_items']}
                 if 'publisher' in entry:
                     entry['publisher'] = entry['publisher'].upper()
+                if 'title' in entry:
+                    entry['title_ascii'] = normalize('NFKD', entry['title']
+                        ).encode(errors='ignore').lower()
                 self.db[self.dst].save(entry)
 
             self.db.catalog.update({'_id': 1}, {'$set': {self.dst: now}})
@@ -74,15 +78,7 @@ def main(**settings):
     db_url = urlparse(settings['mongo_uri'])
     conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
     db = do_connect(conn, db_url)
-
     now = datetime.now()
-    catalog = db.catalog.find_one()
-    if catalog:
-        if catalog.get('updating', False):
-            return
-        db.catalog.update({'_id': 1}, {'$set': {'updating': True}})
-    else:
-        db.catalog.save({'_id': 1, 'updating': True})
 
     def run():
         jobs = []
@@ -95,8 +91,7 @@ def main(**settings):
             job.join()
 
     run()
-    db.catalog.update({'_id': 1}, {'$set':
-        {'updated': now, 'updating': False}})
+    db.catalog.save({'_id': 1, 'updated': now})
 
 
 if __name__ == '__main__':
@@ -105,15 +100,13 @@ if __name__ == '__main__':
     import logging.config
     try:
         if len(sys.argv) < 3:
-            print 'Usage: %s -f CONFIG_FILE)'
+            print 'Usage: %s -f CONFIG_FILE'
             sys.exit(1)
         config = ConfigParser.RawConfigParser()
         config.readfp(open(sys.argv[-1]))
         settings = dict(config.items('app:main'))
-
         logging.config.fileConfig(sys.argv[-1])
-
         main(**settings)
     except IOError:
-        print 'Usage: %s -f CONFIG_FILE)'
+        print 'Usage: %s -f CONFIG_FILE'
         sys.exit(1)

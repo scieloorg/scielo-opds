@@ -50,7 +50,7 @@ def alpha_catalog(request):
 
     entry = []
     try:
-        for alpha in request.db.alpha.find():
+        for alpha in request.db.alpha.find().sort('title_ascii', ASCENDING):
             if 'links' not in alpha:
                 alpha['links'] = [make_link(LinkRel.SUBSECTION,
                     ContentType.ACQUISITION, '/opds/alpha/{}'.format(quote
@@ -73,7 +73,7 @@ def alpha_filter(request):
     """
     _id = request.matchdict['id']
     result = request.db.book.find({'title': {'$regex': '^%s' % _id}}
-        ).sort('title', ASCENDING)
+        ).sort('title_ascii', ASCENDING)
     if not result:
         raise HTTPNotFound()
 
@@ -118,7 +118,7 @@ def publisher_catalog(request):
 
     entry = []
     try:
-        for pub in request.db.publisher.find():
+        for pub in request.db.publisher.find().sort('title_ascii', ASCENDING):
             if 'links' not in pub:
                 pub['links'] = [make_link(LinkRel.SUBSECTION,
                     ContentType.ACQUISITION, '/opds/publisher/{}'.format(quote
@@ -141,7 +141,7 @@ def publisher_filter(request):
     """
     _id = request.matchdict['id']
     result = request.db.book.find({'publisher': unquote(_id)}
-        ).sort('title', ASCENDING)
+        ).sort('title_ascii', ASCENDING)
     if not result:
         raise HTTPNotFound
 
@@ -185,6 +185,7 @@ def new(request):
         make_link('self', ContentType.NAVIGATION, '/opds/new')]
 
     result = request.db.book.find().sort('updated', DESCENDING)
+
     if not result:
         raise HTTPNotFound
 

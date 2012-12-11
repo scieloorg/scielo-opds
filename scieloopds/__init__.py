@@ -39,9 +39,9 @@ def main(global_config, **settings):
     # Create mongodb indexes
     db = do_connect(conn, db_url)
     db.book.ensure_index([('updated', pymongo.DESCENDING)])
-    db.book.ensure_index([('title', pymongo.ASCENDING)])
-    db.alpha.ensure_index([('title', pymongo.ASCENDING)])
-    db.publisher.ensure_index([('title', pymongo.ASCENDING)])
+    db.book.ensure_index([('title_ascii', pymongo.ASCENDING)])
+    db.alpha.ensure_index([('title_ascii', pymongo.ASCENDING)])
+    db.publisher.ensure_index([('title_ascii', pymongo.ASCENDING)])
 
     # Register mongodb connection in pyramid event subscriber
     def add_mongo_db(event):
