@@ -1,3 +1,10 @@
+"""
+.. module: scieloopds.renderers
+   :synopsis: Renderer to build OPDS Atom catalog from dict input
+
+.. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
+"""
+
 from datetime import datetime
 from opds import ContentType, Namespace, LinkRel
 from lxml import etree
@@ -5,7 +12,28 @@ from lxml.builder import ElementMaker
 
 
 def make_entry(values):
-    """ Generate atom:entry from dict.
+    """Create atom:entry element from dict which follow structure:
+    {
+        'title': str,           # REQUIRED
+        '_id': str,             # REQUIRED
+        'updated': datetime,
+        'language': str,
+        'year': str,
+        'publisher': str,
+        'eisbn': str,
+        'links': list, -- use :func:`opds.make_link` to create each item
+        'pdf_file': str,
+        'epub_file': str,
+        'cover_thumbnail': str,
+        'cover': str,
+        'content': str,
+        'synopsis': str,
+        'creators': dict
+    }
+
+    :param values: Catalog entry fields.
+    :type values: dict.
+    :returns: lxml.etree._Element.
     """
     atom = ElementMaker(namespace=Namespace.ATOM,
         nsmap={'atom': Namespace.ATOM})
@@ -82,10 +110,22 @@ def make_entry(values):
 
 
 def make_feed(values):
-    """ Generate atom:feed from dict.
+    """Create atom:feed element from dict which follow structure:
+    {
+        'title': str,
+        '_id': str,
+        'updated': datetime,
+        'language': str,
+        'links': list, -- use :func:`opds.make_link` to create each item
+        'entry': list -- see :func:`make_entry` doc for structure of each item,
+    }
+
+    :param values: Catalog feed fields.
+    :type values: dict.
+    :returns: lxml.etree._Element.
     """
     atom = ElementMaker(namespace=Namespace.ATOM,
-        nsmap={'atom': Namespace.ATOM})
+    nsmap={'atom': Namespace.ATOM})
 
     updated = values.get('updated', datetime.now())
 
@@ -115,9 +155,22 @@ def make_feed(values):
 
 
 def opds_factory(info):
-    """ Pyramid Render which return OPDS Feed
+    """Factory which create OPDS render
+
+    :param info: An object having the attributes name (render name) and
+    package (the active package when render was registered)
+    :type info: object.
+    :returns: function.
     """
     def _render(value, system):
+        """Call the render implementation
+
+        :param value: View return parameters.
+        :type value: dict.
+        :param system: System values (view, context, request)
+        :type system: dict.
+        :returns: str.
+        """
         request = system.get('request')
         if request is not None:
             response = request.response
