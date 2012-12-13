@@ -1,3 +1,10 @@
+"""
+.. module: scieloopds.tests
+   :synopsis: Automated tests.
+
+.. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
+"""
+
 import unittest
 import feedparser
 import json

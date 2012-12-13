@@ -1,3 +1,38 @@
+"""
+.. module: scieloopds.sync
+   :synopsis: SciELO Books synchronization job.
+
+.. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
+
+Automatically synchronization
+-----------------------------
+In INI configuration file of pyramid application set the follow parameters:
+.. note::
+   auto_sync = True
+   auto_sync_interval = SECONDS (Default: 60)
+   auto_sync_cmd = python -m scieloopds.sync -f CONFIGURATION_FILE
+
+Manual synchronization
+----------------------
+Call the follow command with INI configuration file:
+.. note::
+   $ python -m scieloopds.sync -f CONFIGURATION_FILE
+
+Configuration file parameters
+-----------------------------
+The configuration file can be the same as pyramid application (preferred)
+but only the 'scielo_uri' (base url of resources which will be syncrhonized)
+and 'mongo_uri' (connection uri of local storage), i.e.:
+.. note::
+   mongo_uri = mongodb://localhost:27017/scieloopds
+   scielo_uri = http://books.scielo.org/api/v1/
+
+Logging configuration
+---------------------
+Will use the 'Sync' logger if exists, otherwise the default defined in
+configuration file
+"""
+
 import urllib2
 import json
 import logging
@@ -11,6 +46,13 @@ from unicodedata import normalize
 
 
 def rest_fetch(url):
+    """Fetch resource with HTTP GET request.
+
+    :param url: URL of resource which will be fetched.
+    :type url: str.
+    :returns:  dict.
+    :raises: HTTPException
+    """
     req = urllib2.Request(url)
     resp = urllib2.urlopen(req)
     data = json.load(resp)
@@ -22,8 +64,19 @@ class SyncError(Exception):
 
 
 class Sync(Thread):
+    """Syncrhonization worker thread"""
 
     def __init__(self, src, dst, db):
+        """Create an worker thread which will synchronize the specified
+        resource with local MongoDB Collection
+
+        :param src: Resource which will be fetched.
+        :type src: str.
+        :param dst: Destination of the resource (MongoDB Collection).
+        :type dst: str.
+        :param db: Backend instance (MongoDB).
+        :type db: pymongo.Database.
+        """
         super(Sync, self).__init__()
         self.src = src
         self.dst = dst

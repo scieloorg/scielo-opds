@@ -1,3 +1,10 @@
+"""
+.. module: scieloopds.views
+   :synopsis: Views.
+
+.. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
+"""
+
 from datetime import datetime
 from .opds import LinkRel, ContentType, make_link, make_pagination_links
 from pyramid.view import view_config
@@ -43,7 +50,7 @@ def root(request):
 
 @view_config(route_name='alpha_catalog', renderer='opds')
 def alpha_catalog(request):
-    """ OPDS Catalog Alpha /opds/alpha
+    """ OPDS Catalog alpha index /opds/alpha
     """
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/alpha')]
@@ -69,7 +76,7 @@ def alpha_catalog(request):
 
 @view_config(route_name='alpha_filter', renderer='opds')
 def alpha_filter(request):
-    """ OPDS Alpha filter for books
+    """ OPDS Alpha filter for books /opds/alpha/[LETTER]
     """
     _id = request.matchdict['id']
     result = request.db.book.find({'title': {'$regex': '^%s' % _id}}
@@ -111,7 +118,7 @@ def alpha_filter(request):
 
 @view_config(route_name='publisher_catalog', renderer='opds')
 def publisher_catalog(request):
-    """ OPDS Catalog Publishers /opds/publisher
+    """ OPDS Catalog publishers index /opds/publisher
     """
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/publisher')]
@@ -137,7 +144,7 @@ def publisher_catalog(request):
 
 @view_config(route_name='publisher_filter', renderer='opds')
 def publisher_filter(request):
-    """ OPDS Catalog Publisher filter for books
+    """ OPDS Catalog publisher filter for books /opds/publisher/[PUBLISHER]
     """
     _id = request.matchdict['id']
     result = request.db.book.find({'publisher': unquote(_id)}
@@ -181,6 +188,8 @@ def publisher_filter(request):
 
 @view_config(route_name='new', renderer='opds')
 def new(request):
+    """ OPDS Catalog new release /opds/new
+    """
     link = [make_link('up', ContentType.NAVIGATION, '/opds/'),
         make_link('self', ContentType.NAVIGATION, '/opds/new')]
 

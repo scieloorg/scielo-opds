@@ -1,3 +1,21 @@
+"""
+.. module: scieloopds
+   :synopsis: WSGI Application to provide SciELO Books in OPDS protocol.
+
+.. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
+
+Example configuration (aditional parameters):
+.. note::
+   [app:main]
+   ...
+   mongo_uri = mongodb://localhost:27017/scieloopds
+   scielo_uri = http://books.scielo.org/api/v1/
+   auto_sync = True
+   auto_sync_interval = 60
+   auto_sync_cmd = python -m scieloopds.sync -f development.ini
+   items_per_page = 20
+"""
+
 import pymongo
 import sys
 import logging
@@ -9,6 +27,16 @@ from datetime import datetime, timedelta
 
 
 def do_connect(db_conn, db_url):
+    """Return MongoDB connection with parameters of specified url in urlparse
+    format `mongodb://[USERNAME:PASSWORD@]HOST:PORT/DB_NAME`
+
+    :param db_conn: The connection that should use.
+    :type db_conn: pymongo.Connection.
+    :param db_url: The database url in urlparse format.
+    :type db_url: str.
+    :returns:  pymongo.Database.
+    :raises: pymongo.errors.AutoReconnect
+    """
     db = db_conn[db_url.path[1:]]
     if db_url.username and db_url.password:
         db.authenticate(db_url.username, db_url.password)
