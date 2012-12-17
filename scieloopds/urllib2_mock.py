@@ -1,3 +1,9 @@
+"""
+.. module: scieloopds.urllib2_mock
+   :synopsis: Mock utilities for automated tests.
+
+.. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
+"""
 from urllib2 import HTTPError
 
 _match = {
