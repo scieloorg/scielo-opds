@@ -15,15 +15,19 @@ Example configuration (aditional parameters):
    auto_sync_cmd = python -m scieloopds.sync -f development.ini
    items_per_page = 20
 """
-
+import os
 import pymongo
 import sys
 import logging
 from pyramid.config import Configurator
 from pyramid.events import NewRequest
+from pyramid.settings import asbool
 from urlparse import urlparse
 from subprocess import Popen
 from datetime import datetime, timedelta
+
+
+APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
 
 def do_connect(db_conn, db_url):
@@ -96,5 +100,18 @@ def main(global_config, **settings):
 
     config.scan()
     config.add_renderer('opds', factory='scieloopds.renderers.opds_factory')
-    # Create indexes in mongodb
-    return config.make_wsgi_app()
+
+    application = config.make_wsgi_app()
+
+    #newrelic agent
+    try:
+        if asbool(settings.get('newrelic.enable', False)):
+            import newrelic.agent
+            newrelic.agent.initialize(os.path.join(APP_PATH, '..', 'newrelic.ini'),
+                settings['newrelic.environment'])
+            return newrelic.agent.wsgi_application()(application)
+        else:
+            return application
+    except IOError:
+        config.registry.settings['newrelic.enable'] = False
+        return application
