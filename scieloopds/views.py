@@ -84,7 +84,7 @@ def alpha_filter(request):
     if not result:
         raise HTTPNotFound()
 
-    base_url = '/opds/alpha/{}'.format(_id)
+    base_url = '/opds/alpha/{}'.format(quote(_id.encode('utf-8')))
     link = [make_link('up', ContentType.NAVIGATION, '/opds/alpha'),
         make_link('self', ContentType.NAVIGATION, base_url)]
 
@@ -152,7 +152,7 @@ def publisher_filter(request):
     if not result:
         raise HTTPNotFound
 
-    base_url = '/opds/publisher/{}'.format(_id)
+    base_url = '/opds/publisher/{}'.format(quote(_id.encode('utf-8')))
 
     link = [make_link('up', ContentType.NAVIGATION, '/opds/publisher'),
         make_link('self', ContentType.NAVIGATION, base_url)]
