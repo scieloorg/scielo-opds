@@ -1,0 +1,17 @@
+version: '2'
+
+services:
+    mongo:
+        image: mongo:latest
+        ports:
+          - "27017:27017"
+    webapp:
+        image: scieloorg/scielo-opds:latest
+        depends_on:
+          - mongo
+        links:
+          - mongo:mongo
+        ports:
+          - "6543:6543"
+        environment:
+          OPDS_MONGO_URI: 'mongodb://mongo:27017/scieloopds'

@@ -26,31 +26,49 @@ from urlparse import urlparse
 from subprocess import Popen
 from datetime import datetime, timedelta
 
+from .sync import main as do_sync
+from .utils import get_db_connection
+
 
 APP_PATH = os.path.abspath(os.path.dirname(__file__))
 
 
-def do_connect(db_conn, db_url):
-    """Return MongoDB connection with parameters of specified url in urlparse
-    format `mongodb://[USERNAME:PASSWORD@]HOST:PORT/DB_NAME`
+DEFAULT_SETTINGS = [
+        ('mongo_uri', 'OPDS_MONGO_URI', str,
+            'mongodb://localhost:27017/scieloopds'),
+        ('scielo_uri', 'OPDS_SCIELO_URI', str,
+            'http://books.scielo.org/api/v1'),
+        ('auto_sync', 'OPDS_AUTO_SYNC', bool,
+            True),
+        ('auto_sync_interval', 'OPDS_AUTO_SYNC_INTERVAL', int,
+            60*60*12),
+        ('items_per_page', 'OPDS_ITEMS_PER_PAGE', int,
+            20),
+        ]
 
-    :param db_conn: The connection that should use.
-    :type db_conn: pymongo.Connection.
-    :param db_url: The database url in urlparse format.
-    :type db_url: str.
-    :returns:  pymongo.Database.
-    :raises: pymongo.errors.AutoReconnect
+
+def parse_settings(settings):
+    """Analisa e retorna as configurações da app com base no arquivo .ini e env.
+
+    As variáveis de ambiente possuem precedência em relação aos valores
+    definidos no arquivo .ini.
     """
-    db = db_conn[db_url.path[1:]]
-    if db_url.username and db_url.password:
-        db.authenticate(db_url.username, db_url.password)
-    return db
+    parsed = {}
+    cfg = list(DEFAULT_SETTINGS)
+
+    for name, envkey, convert, default in cfg:
+        value = os.environ.get(envkey, settings.get(name, default))
+        if convert is not None:
+            value = convert(value)
+        parsed[name] = value
+
+    return parsed
 
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
-    config = Configurator(settings=settings)
+    config = Configurator(settings=parse_settings(settings))
     config.add_static_view('static', 'static', cache_max_age=3600)
     config.add_route('root', '/opds/')
     config.add_route('new', '/opds/new')
@@ -59,59 +77,41 @@ def main(global_config, **settings):
     config.add_route('publisher_catalog', '/opds/publisher')
     config.add_route('publisher_filter', '/opds/publisher/{id}')
 
-    # Create mongodb connection
-    db_url = urlparse(settings['mongo_uri'])
-    try:
-        conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
-    except pymongo.errors.AutoReconnect as e:
-        logging.getLogger(__name__).error('MongoDB: %s' % e.message)
-        sys.exit(1)
-    config.registry.settings['db_conn'] = conn
+    config.add_subscriber(add_mongo_db, NewRequest)
+    config.add_subscriber(start_sync, NewRequest)
+    config.scan(ignore='scieloopds.tests')
+    config.add_renderer('opds', factory='scieloopds.renderers.opds_factory')
+    return config.make_wsgi_app()
 
-    # Create mongodb indexes
-    db = do_connect(conn, db_url)
+
+def ensure_indexes(db):
     db.book.ensure_index([('updated', pymongo.DESCENDING)])
     db.book.ensure_index([('title_ascii', pymongo.ASCENDING)])
     db.alpha.ensure_index([('title_ascii', pymongo.ASCENDING)])
     db.publisher.ensure_index([('title_ascii', pymongo.ASCENDING)])
 
-    # Register mongodb connection in pyramid event subscriber
-    def add_mongo_db(event):
-        settings = event.request.registry.settings
-        db = do_connect(settings['db_conn'], db_url)
-        if settings.get('auto_sync', False):
-            # 10 minutes default interval
-            interval = settings.get('auto_sync_interval', 600)
-            cmd = settings['auto_sync_cmd'].split()
-            try:
-                catalog = db.catalog.find_one()
-                if catalog:
-                    last_updated = catalog['updated'] + timedelta(
-                        seconds=int(interval))
-                    if last_updated < datetime.now():
-                        Popen(cmd)
-                else:
-                    Popen(cmd)
-            except pymongo.errors.AutoReconnect as e:
-                logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
-        event.request.db = db
-    config.add_subscriber(add_mongo_db, NewRequest)
+def add_mongo_db(event):
+    settings = event.request.registry.settings
+    db = get_db_connection(settings)
+    ensure_indexes(db)
+    event.request.db = db
 
-    config.scan()
-    config.add_renderer('opds', factory='scieloopds.renderers.opds_factory')
 
-    application = config.make_wsgi_app()
+def start_sync(event):
+    settings = event.request.registry.settings
+    if settings['auto_sync']:
+        db = event.request.db
+        interval = settings['auto_sync_interval']
+        try:
+            update = db.catalog.find_one()
+            if update:
+                last_update = update['updated']
+                next_update = last_update + timedelta(seconds=interval)
+                if next_update < datetime.now():
+                    do_sync(settings)
+            else:
+                do_sync(settings)
+        except pymongo.errors.AutoReconnect as e:
+            logging.getLogger(__name__).error('MongoDB: %s' % e.message)
 
-    #newrelic agent
-    try:
-        if asbool(settings.get('newrelic.enable', False)):
-            import newrelic.agent
-            newrelic.agent.initialize(os.path.join(APP_PATH, '..', 'newrelic.ini'),
-                settings['newrelic.environment'])
-            return newrelic.agent.wsgi_application()(application)
-        else:
-            return application
-    except IOError:
-        config.registry.settings['newrelic.enable'] = False
-        return application

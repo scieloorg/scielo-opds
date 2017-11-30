@@ -13,7 +13,7 @@ import urllib2_mock
 import pymongo
 from datetime import datetime
 from urlparse import urlparse
-from scieloopds import do_connect
+from scieloopds.utils import get_db_connection
 
 from lxml import etree
 from pyramid import testing
@@ -32,14 +32,14 @@ def setUpModule():
 
 
 def tearDownModule():
-    db = do_connect(conn, db_url)
+    db = get_db_connection(settings)
     conn.drop_database(db.name)
 
 
 class ViewTests(unittest.TestCase):
     def setUp(self):
         self.config = testing.setUp()
-        self.db = do_connect(conn, db_url)
+        self.db = get_db_connection(settings)
 
     def tearDown(self):
         testing.tearDown()

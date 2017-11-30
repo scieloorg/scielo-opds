@@ -37,7 +37,7 @@ import urllib2
 import json
 import logging
 import pymongo
-from scieloopds import do_connect
+from .utils import get_db_connection
 from threading import Thread
 from datetime import datetime
 from urlparse import urlparse, urljoin
@@ -121,16 +121,14 @@ class Sync(Thread):
             log.warning('%s' % e.message)
 
 
-def main(**settings):
+def main(settings):
     base_url = settings['scielo_uri']
     resource = ((urljoin(base_url, 'books/'), 'book'),
         (urljoin(base_url, 'alphasum/'), 'alpha'),
         (urljoin(base_url, 'publishers/'), 'publisher'))
 
     # Create mongodb connection
-    db_url = urlparse(settings['mongo_uri'])
-    conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
-    db = do_connect(conn, db_url)
+    db = get_db_connection(settings)
     now = datetime.now()
 
     def run():
@@ -159,7 +157,7 @@ if __name__ == '__main__':
         config.readfp(open(sys.argv[-1]))
         settings = dict(config.items('app:main'))
         logging.config.fileConfig(sys.argv[-1])
-        main(**settings)
+        main(settings)
     except IOError:
         print 'Usage: %s -f CONFIG_FILE'
         sys.exit(1)
