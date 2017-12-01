@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 .. module: scieloopds.sync
    :synopsis: SciELO Books synchronization job.

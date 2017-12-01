@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 .. module: scieloopds.opds
    :synopsis: Useful utilities to help build OPDS catalog.

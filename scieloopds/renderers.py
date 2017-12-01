@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 .. module: scieloopds.renderers
    :synopsis: Renderer to build OPDS Atom catalog from dict input

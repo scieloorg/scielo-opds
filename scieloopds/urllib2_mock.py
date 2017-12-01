@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 .. module: scieloopds.urllib2_mock
    :synopsis: Mock utilities for automated tests.

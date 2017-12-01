@@ -1,3 +1,4 @@
+# coding: utf-8
 """
 .. module: scieloopds
    :synopsis: WSGI Application to provide SciELO Books in OPDS protocol.
