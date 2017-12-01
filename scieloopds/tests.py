@@ -5,36 +5,37 @@
 
 .. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
 """
-
 import unittest
-import feedparser
 import json
-import sync
-import urllib2_mock
-import pymongo
 from datetime import datetime
 from urlparse import urlparse
-from scieloopds.utils import get_db_connection
 
+import pymongo
+import feedparser
 from lxml import etree
 from pyramid import testing
 
-settings = {}
-settings['mongo_uri'] = 'mongodb://localhost:27017/scieloopds-test'
-settings['scielo_uri'] = 'http://books.scielo.org/api/v1/'
-# Create mongodb connection
-db_url = urlparse(settings['mongo_uri'])
-conn = pymongo.Connection(host=db_url.hostname, port=db_url.port)
+from scieloopds.utils import get_db_connection
+from scieloopds import (
+        sync,
+        urllib2_mock,
+        )
+
+
+settings = {
+        'mongo_uri': 'mongodb://localhost:27017/scieloopds-test',
+        'scielo_uri': 'http://books.scielo.org/api/v1/',
+        }
 
 
 def setUpModule():
     sync.urllib2 = urllib2_mock
-    sync.main(**settings)
+    sync.main(settings)
 
 
 def tearDownModule():
     db = get_db_connection(settings)
-    conn.drop_database(db.name)
+    db.client.drop_database(db.name)
 
 
 class ViewTests(unittest.TestCase):
