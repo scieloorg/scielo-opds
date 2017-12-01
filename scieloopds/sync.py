@@ -10,7 +10,6 @@ In INI configuration file of pyramid application set the follow parameters:
 .. note::
    auto_sync = True
    auto_sync_interval = SECONDS (Default: 60)
-   auto_sync_cmd = python -m scieloopds.sync -f CONFIGURATION_FILE
 
 Manual synchronization
 ----------------------
@@ -44,6 +43,9 @@ from unicodedata import normalize
 import pymongo
 
 from .utils import get_db_connection
+
+
+LOGGER = logging.getLogger('sync')
 
 
 def rest_fetch(url):
@@ -82,11 +84,14 @@ class Sync(Thread):
         self.src = src
         self.dst = dst
         self.db = db
+        self._total_synced = 0
+
+    def _incr_total_synced(self):
+        self._total_synced += 1
 
     def run(self):
-        log = logging.getLogger('Sync')
         try:
-            log.info('fetching <%s>' % self.src)
+            LOGGER.info('fetching <%s>', self.src)
             now = datetime.now()
             data = rest_fetch(self.src)
             if not data:
@@ -109,17 +114,22 @@ class Sync(Thread):
                     entry['title_ascii'] = normalize('NFKD', entry['title']
                         ).encode(errors='ignore').lower()
                 self.db[self.dst].save(entry)
+                self._incr_total_synced()
 
             self.db.catalog.update({'_id': 1}, {'$set': {self.dst: now}})
 
         except urllib2.URLError as e:
-            log.error('%s:%s <%s> %s' % (e.__class__.__name__,
+            LOGGER.error('%s:%s <%s> %s' % (e.__class__.__name__,
                 e.message, e.url, e.msg))
         except HTTPException as e:
-            log.error('%s:%s <%s> ' % (e.__class__.__name__,
+            LOGGER.error('%s:%s <%s> ' % (e.__class__.__name__,
                 e.message, self.url))
         except SyncError as e:
-            log.warning('%s' % e.message)
+            LOGGER.warning('%s' % e.message)
+
+        finally:
+            LOGGER.info('total of "%s" resources of type "%s" have been synced' % (
+                self._total_synced, self.src))
 
 
 def main(settings):
@@ -162,3 +172,4 @@ if __name__ == '__main__':
     except IOError:
         print 'Usage: %s -f CONFIG_FILE'
         sys.exit(1)
+
