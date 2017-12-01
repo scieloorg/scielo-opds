@@ -4,11 +4,12 @@
 
 .. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
 """
-
 from datetime import datetime
-from opds import ContentType, Namespace, LinkRel
+
 from lxml import etree
 from lxml.builder import ElementMaker
+
+from opds import ContentType, Namespace, LinkRel
 
 
 def make_entry(values):

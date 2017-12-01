@@ -1,6 +1,7 @@
 import sys
-import pymongo
 import logging
+
+import pymongo
 
 from urlparse import urlparse
 

@@ -12,19 +12,18 @@ Example configuration (aditional parameters):
    scielo_uri = http://books.scielo.org/api/v1/
    auto_sync = True
    auto_sync_interval = 60
-   auto_sync_cmd = python -m scieloopds.sync -f development.ini
    items_per_page = 20
 """
 import os
-import pymongo
 import sys
 import logging
+from urlparse import urlparse
+from datetime import datetime, timedelta
+
+import pymongo
 from pyramid.config import Configurator
 from pyramid.events import NewRequest
 from pyramid.settings import asbool
-from urlparse import urlparse
-from subprocess import Popen
-from datetime import datetime, timedelta
 
 from .sync import main as do_sync
 from .utils import get_db_connection

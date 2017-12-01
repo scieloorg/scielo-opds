@@ -32,17 +32,18 @@ Logging configuration
 Will use the 'Sync' logger if exists, otherwise the default defined in
 configuration file
 """
-
 import urllib2
 import json
 import logging
-import pymongo
-from .utils import get_db_connection
 from threading import Thread
 from datetime import datetime
 from urlparse import urlparse, urljoin
 from httplib import HTTPException
 from unicodedata import normalize
+
+import pymongo
+
+from .utils import get_db_connection
 
 
 def rest_fetch(url):

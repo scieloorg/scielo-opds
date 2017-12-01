@@ -4,14 +4,15 @@
 
 .. moduleauthor:: Allison Vollmann <allisonvoll@gmail.com>
 """
-
+import logging
 from datetime import datetime
-from .opds import LinkRel, ContentType, make_link, make_pagination_links
+from urllib import quote, unquote
+
 from pyramid.view import view_config
 from pyramid.httpexceptions import HTTPNotFound
 from pymongo import ASCENDING, DESCENDING, errors
-from urllib import quote, unquote
-import logging
+
+from .opds import LinkRel, ContentType, make_link, make_pagination_links
 
 
 def paginate(cursor, page, items_per_page):
