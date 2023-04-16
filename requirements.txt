@@ -1,7 +1,8 @@
 gunicorn==18.0
 lxml==3.3.5
 pymongo==2.7
-pyramid==1.5
+pyramid==1.6a1
 pyramid-debugtoolbar==2.0.2
 feedparser==5.2.1
 webtest==2.0.29
+setuptools>=65.5.1 # not directly required, pinned by Snyk to avoid a vulnerability
